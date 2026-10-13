@@ -1,0 +1,40 @@
+{
+  "name": "femantis-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Electron desktop viewer for FEM-Toolbox meshes",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:backend": ".venv/bin/python -m unittest discover -s tests/backend -v",
+    "test:desktop": "playwright test",
+    "setup:backend": "python3 scripts/setup_backend.py",
+    "benchmark": ".venv/bin/python scripts/benchmark_backend.py"
+  },
+  "dependencies": {
+    "lucide-react": "1.56.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "0.186.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.7.0",
+    "electron-vite": "5.0.0",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2",
+    "vite": "7.3.7",
+    "vitest": "4.1.11"
+  }
+}

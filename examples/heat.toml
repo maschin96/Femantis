@@ -1,0 +1,35 @@
+"schema_version" = 1
+"units" = "SI"
+"physics" = "heat"
+
+["materials"]
+
+["materials"."T"]
+
+["materials"."T"."Werkstoff"]
+"conductivity" = 2.0
+"unit" = "W/(m K)"
+
+["regions"]
+
+["regions"."T"]
+"Basis" = "Werkstoff"
+"Spitze" = "Werkstoff"
+
+["boundary"]
+
+[["boundary"."dirichlet"]]
+"field" = "T"
+"set" = "Einspannung"
+"value" = 300.0
+"unit" = "K"
+
+[["boundary"."dirichlet"]]
+"field" = "T"
+"set" = "Stirnflaeche"
+"value" = 350.0
+"unit" = "K"
+
+["mesh"]
+"path" = "cantilever.msh"
+"length_scale_to_m" = 1.0

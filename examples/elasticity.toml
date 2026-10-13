@@ -1,0 +1,35 @@
+"schema_version" = 1
+"units" = "SI"
+"physics" = "elasticity"
+
+["materials"]
+
+["materials"."u"]
+
+["materials"."u"."Werkstoff"]
+"young" = 100000000000.0
+"poisson" = 0.0
+"unit" = "Pa"
+
+["regions"]
+
+["regions"."u"]
+"Basis" = "Werkstoff"
+"Spitze" = "Werkstoff"
+
+["boundary"]
+
+[["boundary"."dirichlet"]]
+"field" = "u"
+"set" = "Einspannung"
+"value" = 0.0
+"unit" = "m"
+
+[["boundary"."traction"]]
+"set" = "Stirnflaeche"
+"value" = [1000000.0, 0, 0]
+"unit" = "N/m^2"
+
+["mesh"]
+"path" = "cantilever.msh"
+"length_scale_to_m" = 1.0

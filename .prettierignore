@@ -1,0 +1,6 @@
+out
+node_modules
+.cache
+.venv
+test-results
+examples/*.msh

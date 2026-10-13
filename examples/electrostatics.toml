@@ -1,0 +1,35 @@
+"schema_version" = 1
+"units" = "SI"
+"physics" = "electrostatics"
+
+["materials"]
+
+["materials"."phi"]
+
+["materials"."phi"."Werkstoff"]
+"permittivity" = 1.0
+"unit" = "relative"
+
+["regions"]
+
+["regions"."phi"]
+"Basis" = "Werkstoff"
+"Spitze" = "Werkstoff"
+
+["boundary"]
+
+[["boundary"."dirichlet"]]
+"field" = "phi"
+"set" = "Einspannung"
+"value" = 0.0
+"unit" = "V"
+
+[["boundary"."dirichlet"]]
+"field" = "phi"
+"set" = "Stirnflaeche"
+"value" = 10.0
+"unit" = "V"
+
+["mesh"]
+"path" = "cantilever.msh"
+"length_scale_to_m" = 1.0
