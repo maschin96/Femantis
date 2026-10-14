@@ -49,6 +49,8 @@ Der Gmsh-Reader der Toolbox 1.4.0 liefert keine Original-Gmsh-IDs. Der Inspector
 
 Der vollständige Datensatz der vorhandenen Toolbox-Model-API kann zusätzlich als JSON bearbeitet werden. So bleiben Tensoren und explizite Knotenlisten erhalten. Textänderungen zuerst **Übernehmen** oder **Textentwurf verwerfen**; Speichern, Berechnung und Navigation sind bis dahin gesperrt.
 
+JSON-Übernahme, TOML-Import und Projektöffnung prüfen die für den Editor erforderlichen Tabellen und Zahlen-/Vektorstrukturen. Bei Ablehnung nennt die Meldung den betroffenen Datenpfad (z. B. `boundary.traction[0].value`); der bisherige Arbeitsstand bleibt erhalten. Fehlerhafte vorhandene Entwürfe lassen sich im vollständigen Datensatz korrigieren. Physikalische Gültigkeit, Einheiten, Referenzen und netzabhängige Dirichlet-Vektorlängen prüft weiterhin **Modell prüfen** über die Toolbox.
+
 **TOML öffnen/exportieren** verwendet das bestehende Model-Schema 1. Beim Export wird eine zugehörige Netzdatei daneben abgelegt. Gmsh-Fälle lassen sich auch mit `Model.from_file` direkt in der Toolbox öffnen. Für VTU-Fälle verwendet Desktop den öffentlichen Weg `read_vtu` → `Model(mesh=..., document=...)`; die Toolbox-`from_file`-Methode erwartet Gmsh.
 
 Drei fertige Beispiele: [Wärmeleitung](examples/heat.toml), [Elastizität](examples/elasticity.toml), [Elektrostatik](examples/electrostatics.toml). Nach **Modell erstellen → TOML öffnen** kann eines gewählt und direkt berechnet werden. Beim Start wird weiterhin das reine Kragträgernetz geladen.
