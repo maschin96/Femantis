@@ -73,6 +73,7 @@ npm run benchmark
 
 ## Dokumentation
 
+- [Aktueller Projektstand und offene Abnahmegates](Doc/PROJECT_STATUS.md)
 - [UI-, Architektur- und Umsetzungsplan](Doc/ELECTRON_UI_PLAN.md)
 - [Umsetzungsumfang und Abnahme](Doc/IMPLEMENTATION.md)
 - [Modellerstellung und Berechnungsnachweise](Doc/MODELLING_IMPLEMENTATION.md)
