@@ -57,13 +57,20 @@ export function MeshViewer(props: Props) {
     viewport.current?.setSelected(props.selectedTriangle);
   }, [props.selectedTriangle]);
   useEffect(() => {
-    viewport.current?.setField(
-      props.field || null,
-      props.component || 'scalar',
-      props.limits || null,
-      props.displacement || null,
-      props.deformationFactor || 0,
-    );
+    try {
+      viewport.current?.setField(
+        props.field || null,
+        props.component || 'scalar',
+        props.limits || null,
+        props.displacement || null,
+        props.deformationFactor || 0,
+      );
+      if (viewport.current) setError(null);
+    } catch (error) {
+      setError(
+        `Die Felddarstellung konnte nicht aktualisiert werden: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }, [
     props.mesh,
     props.field,

@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { MeshPacket, ViewState } from '../../shared/types';
 import { selectedTriangles, visibleTriangles } from './geometry';
 import type { ResultField } from '../../shared/types';
-import { scalarValues, fieldLimits } from './fields';
+import { scalarValues, fieldLimits, gpuFieldValues } from './fields';
 import { OrientationGizmo } from './OrientationGizmo';
 
 export class Viewport {
@@ -54,13 +54,13 @@ export class Viewport {
   private standardMaterial: THREE.Material;
   private resultField: ResultField | null = null;
   private resultValues: Float64Array | null = null;
+  private gpuValues: Float32Array | null = null;
   private deformation: Float64Array | null = null;
   private deformationFactor = 0;
   private fieldMaterial = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
-    uniforms: { low: { value: 0 }, high: { value: 1 } },
     vertexShader: `attribute float femValue; varying float value; void main(){value=femValue;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-    fragmentShader: `uniform float low;uniform float high;varying float value;void main(){float t=clamp((value-low)/(high-low),0.0,1.0);vec3 a=vec3(0.0578054,0.0003035,0.0886556);vec3 b=vec3(0.0437350,0.0843762,0.2581829);vec3 c=vec3(0.0152085,0.2831487,0.2622507);vec3 d=vec3(0.1119324,0.5840784,0.1221388);vec3 e=vec3(0.9822506,0.7991027,0.0185002);vec3 col=t<0.25?mix(a,b,t*4.0):t<0.5?mix(b,c,(t-0.25)*4.0):t<0.75?mix(c,d,(t-0.5)*4.0):mix(d,e,(t-0.75)*4.0);gl_FragColor=vec4(col,1.0);\n#include <colorspace_fragment>\n }`,
+    fragmentShader: `varying float value;void main(){float t=clamp(value,0.0,1.0);vec3 a=vec3(0.0578054,0.0003035,0.0886556);vec3 b=vec3(0.0437350,0.0843762,0.2581829);vec3 c=vec3(0.0152085,0.2831487,0.2622507);vec3 d=vec3(0.1119324,0.5840784,0.1221388);vec3 e=vec3(0.9822506,0.7991027,0.0185002);vec3 col=t<0.25?mix(a,b,t*4.0):t<0.5?mix(b,c,(t-0.25)*4.0):t<0.75?mix(c,d,(t-0.5)*4.0):mix(d,e,(t-0.75)*4.0);gl_FragColor=vec4(col,1.0);\n#include <colorspace_fragment>\n }`,
   });
 
   constructor(
@@ -226,9 +226,9 @@ export class Viewport {
         visibleNodes.add(node);
         coordinates.set(this.vertex(node), displayIndex * 9 + local * 3);
         colors.set(color.toArray(), displayIndex * 9 + local * 3);
-        if (this.resultValues)
+        if (this.gpuValues)
           femValues[displayIndex * 3 + local] =
-            this.resultValues[
+            this.gpuValues[
               this.resultField?.association === 'cell' ? this.mesh.triangleOwners[triangle] : node
             ];
         const next = this.mesh.triangles[triangle * 3 + ((local + 1) % 3)];
@@ -271,16 +271,14 @@ export class Viewport {
     displacement: Float64Array | null,
     factor: number,
   ): void {
+    const values = field ? scalarValues(field, component) : null;
+    const gpu = values ? gpuFieldValues(values, limits || fieldLimits(values)) : null;
     this.resultField = field;
-    this.resultValues = field ? scalarValues(field, component) : null;
+    this.resultValues = values;
+    this.gpuValues = gpu;
     this.deformation = displacement;
     this.deformationFactor = factor;
     this.surface.material = field ? this.fieldMaterial : this.standardMaterial;
-    if (this.resultValues) {
-      const range = limits || fieldLimits(this.resultValues);
-      this.fieldMaterial.uniforms.low.value = range[0];
-      this.fieldMaterial.uniforms.high.value = range[1];
-    }
     this.setView(this.view);
   }
 

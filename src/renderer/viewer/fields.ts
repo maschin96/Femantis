@@ -29,6 +29,28 @@ export function fieldLimits(values: Float64Array): [number, number] {
     ? [min - Math.max(1, Math.abs(min)) * 1e-6, max + Math.max(1, Math.abs(max)) * 1e-6]
     : [min, max];
 }
+
+/** Affine display coordinates: normalize in Double before rounding for the GPU.
+ * Keep extrapolated values so clipping happens after nodal interpolation.
+ */
+export function gpuFieldValues(values: Float64Array, limits: [number, number]): Float32Array {
+  const [low, high] = limits;
+  if (!Number.isFinite(low) || !Number.isFinite(high) || low >= high)
+    throw new Error('Die Skala benötigt zwei endliche, aufsteigende Grenzen.');
+  const width = high - low;
+  const output = new Float32Array(values.length);
+  for (let index = 0; index < values.length; index++) {
+    const value = values[index];
+    const difference = value - low;
+    output[index] =
+      Number.isFinite(width) && Number.isFinite(difference)
+        ? difference / width
+        : (value / 2 - low / 2) / (high / 2 - low / 2);
+    if (!Number.isNaN(value) && !Number.isFinite(output[index]))
+      throw new Error('Die Skala ist für diese Feldwerte zu eng. Bitte die Grenzen vergrößern.');
+  }
+  return output;
+}
 export const fieldLabels: Record<string, string> = {
   temperature_K: 'Temperatur',
   potential_V: 'Potential',
