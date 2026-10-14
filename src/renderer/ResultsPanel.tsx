@@ -24,8 +24,18 @@ export function ResultsPanel(props: Props) {
       <div className="result-status">
         <b>Berechnung abgeschlossen</b>
         <span className={props.stale ? 'stale-badge' : 'badge'}>
-          {props.stale ? 'Vorheriger Modellstand' : 'Aktueller Modellstand'}
+          {!props.result.provenanceVerified
+            ? 'Zuordnung nicht verifiziert'
+            : props.stale
+              ? 'Vorheriger Modellstand'
+              : 'Aktueller Modellstand'}
         </span>
+        {!props.result.provenanceVerified && (
+          <p className="editor-warning">
+            Dieser ältere Lauf hat keinen gespeicherten Laufnachweis. Bitte neu berechnen, um seine
+            Zuordnung zum Modell zu bestätigen.
+          </p>
+        )}
       </div>
       <div className="result-controls">
         <label className="editor-input">

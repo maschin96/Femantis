@@ -111,7 +111,9 @@ def handle_request(request):
         write_vtu(Path(request["outputDir"]) / "box.vtu", mesh)
         return {"created": True}
     if action == "readResult":
-        return write_artifact(read_result(Path(request["directory"])), Path(request["outputDir"]))
+        expected_mesh = read_mesh(request["path"], float(request.get("scale", 1)))
+        return write_artifact(read_result(Path(request["directory"]), expected_mesh=expected_mesh,
+                                         expected_physics=request["physics"]), Path(request["outputDir"]))
     if action not in ("importMesh", "validateModel", "solveModel"):
         raise ValueError("Unbekannte Adapteraktion.")
     mesh = read_mesh(request["path"], float(request.get("scale", 1)))

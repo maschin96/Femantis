@@ -81,6 +81,8 @@ export interface ResultPacket {
   inputHash: string;
   physics: Physics;
   fields: ResultField[];
+  provenanceVerified: boolean;
+  provenanceSha256?: string;
   metrics: Record<string, Record<string, unknown>>;
   limitations: string[];
 }

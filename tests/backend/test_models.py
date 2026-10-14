@@ -85,6 +85,38 @@ class ModelTests(unittest.TestCase):
         all_facets = np.concatenate(list(mesh.facet_sets.values()))
         self.assertEqual(len(np.unique(all_facets)), mesh.n_facets)
 
+    def test_result_field_dimensions_and_active_indices_are_checked(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder = Path(folder)
+            solve_model(self.mesh, case("heat"), folder)
+            original = json.loads((folder / "result.json").read_text())
+            for change in ("components", "active_nodes", "point_count", "physics"):
+                with self.subTest(change=change):
+                    manifest = json.loads(json.dumps(original))
+                    field = manifest["fields"]["point"]["temperature_K"]
+                    if change == "components":
+                        field["components"] = ["x", "y", "z"]
+                    elif change == "active_nodes":
+                        field["active_node_ids"] = [-1]
+                    elif change == "point_count":
+                        manifest["mesh"]["points"] += 1
+                    else:
+                        manifest["physics"] = "elasticity"
+                    (folder / "result.json").write_text(json.dumps(manifest))
+                    with self.assertRaises(ValueError):
+                        read_result(folder, expected_mesh=self.mesh, expected_physics="heat")
+
+    def test_result_mesh_geometry_and_topology_match_the_input(self):
+        from fem_toolbox.mesh import Mesh
+        with tempfile.TemporaryDirectory() as folder:
+            solve_model(self.mesh, case("heat"), folder)
+            points = self.mesh.points.copy()
+            points[:, 0] *= 2
+            other = Mesh(points=points, tetra4=self.mesh.cells, triangle3=self.mesh.facets,
+                         volume_sets=self.mesh.volume_sets, facet_sets=self.mesh.facet_sets)
+            with self.assertRaisesRegex(ValueError, "[Nn]etz"):
+                read_result(folder, expected_mesh=other, expected_physics="heat")
+
 
 if __name__ == "__main__":
     unittest.main()

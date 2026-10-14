@@ -42,6 +42,7 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
         directory: runDir,
         modelKey: result.modelKey,
         sourceKey: sourceKey(source),
+        provenanceSha256: result.provenanceSha256,
       });
       const opened = await openProjectFile(filename);
       expect(opened.model).toEqual(model);
@@ -51,6 +52,8 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
         opened.run!.directory,
         runId,
         opened.run!.modelKey,
+        opened.source,
+        opened.run!.provenanceSha256,
       );
       expect(loaded.fields.find((f) => f.id === 'temperature_K')!.values).toEqual(field.values);
     } finally {
