@@ -71,6 +71,8 @@ npm run benchmark
 
 `test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS.
 
+Die GitHub-Prüfjobs und das für die private Toolbox nötige Lesesecret sind unter [CI](Doc/CI.md) beschrieben.
+
 ## Dokumentation
 
 - [UI-, Architektur- und Umsetzungsplan](Doc/ELECTRON_UI_PLAN.md)
