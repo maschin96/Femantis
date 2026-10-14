@@ -157,3 +157,51 @@ test('vollständiger Datensatz blockiert versehentliches Speichern unapplizierte
   await expect(page.getByLabel('Werkstoff · Poissonzahl', { exact: true })).toHaveValue('0.1');
   expect(errors).toEqual([]);
 });
+
+test('Modellneustart schützt Material und Randbedingungen bis zur Bestätigung', async () => {
+  await calculate('displacement_m');
+  await page.getByRole('button', { name: /Modell (neu )?erstellen/, exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Modell neu erstellen' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText('Materialien');
+  await expect(dialog).toContainText('Randbedingungen');
+  await expect(dialog.getByRole('button', { name: 'Abbrechen', exact: true })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('button', { name: 'Neu erstellen', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('button', { name: 'Abbrechen', exact: true })).toBeFocused();
+  await page.screenshot({ path: 'test-results/model-restart.png' });
+  await dialog.getByRole('button', { name: 'Abbrechen', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Modell neu erstellen', exact: true }),
+  ).toBeFocused();
+  await showModel();
+  await expect(page.getByLabel('Werkstoff · E-Modul [GPa]', { exact: true })).toHaveValue('100');
+  await expect(page.getByLabel('Werkstoff · Poissonzahl', { exact: true })).toHaveValue('0.1');
+  await expect(page.getByLabel('Flächenlast 1 · x [N/m²]', { exact: true })).toHaveValue('1000000');
+  await page.getByRole('button', { name: /04 Ergebnisse/ }).click();
+  await expect(page.locator('.result-status')).toContainText('Aktueller Modellstand');
+  await page.getByRole('button', { name: /Modell (neu )?erstellen/, exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('button', { name: /Modell (neu )?erstellen/, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Neu erstellen', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByLabel('Physik', { exact: true })).toHaveValue('elasticity');
+  await expect(page.getByLabel('Werkstoff · E-Modul [GPa]', { exact: true })).toHaveValue('210');
+  await expect(page.getByLabel('Flächenlast 1 · x [N/m²]', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: /04 Ergebnisse/ }).click();
+  await expect(page.locator('.result-status')).toContainText('Vorheriger Modellstand');
+  await showModel();
+  await page
+    .getByRole('button', { name: 'Vollständigen Model-Datensatz bearbeiten', exact: true })
+    .click();
+  const input = page.getByLabel('Vollständiger Model-Datensatz', { exact: true });
+  await input.fill('{"unvollstaendig":');
+  await expect(
+    page.getByRole('button', { name: /Modell (neu )?erstellen/, exact: true }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: 'Textentwurf verwerfen', exact: true }).click();
+  expect(errors).toEqual([]);
+});

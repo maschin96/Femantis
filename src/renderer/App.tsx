@@ -36,6 +36,7 @@ import { MeshViewer } from './viewer/MeshViewer';
 import { newModel, canonicalModel, physicsLabels } from '../shared/model';
 import { ModelEditor } from './ModelEditor';
 import { BoxCreator } from './BoxCreator';
+import { ModelRestartDialog } from './ModelRestartDialog';
 import { ResultsPanel } from './ResultsPanel';
 import { scalarValues, fieldLimits } from './viewer/fields';
 
@@ -86,6 +87,7 @@ export function App() {
   const [result, setResult] = useState<ResultPacket | null>(null);
   const [stage, setStage] = useState<'mesh' | 'model' | 'calculation' | 'results'>('mesh');
   const [boxDialog, setBoxDialog] = useState(false);
+  const [restartDialog, setRestartDialog] = useState(false);
   const [phase, setPhase] = useState('');
   const [fieldId, setFieldId] = useState('');
   const [component, setComponent] = useState('scalar');
@@ -111,7 +113,11 @@ export function App() {
     setDirty(true);
   }
   function createModel() {
-    if (mesh && !pendingJSON) {
+    if (mesh && !busy && !pendingJSON) {
+      if (model) {
+        setRestartDialog(true);
+        return;
+      }
       editModel(newModel(mesh));
       setStage('model');
     }
@@ -422,7 +428,7 @@ export function App() {
           <div className="model-sidebar-actions">
             <button disabled={!mesh || !!busy || pendingJSON} onClick={createModel}>
               <Plus size={14} />
-              Modell erstellen
+              {model ? 'Modell neu erstellen' : 'Modell erstellen'}
             </button>
             <button
               disabled={!!busy || pendingJSON || !backend.available}
@@ -872,6 +878,21 @@ export function App() {
               }
             })
           }
+        />
+      )}
+      {restartDialog && (
+        <ModelRestartDialog
+          onCancel={() => setRestartDialog(false)}
+          onConfirm={() => {
+            if (mesh && model && !busy && !pendingJSON) {
+              editModel(newModel(mesh, model.physics));
+              setStage('model');
+              notice(
+                'Neuer Modellentwurf erstellt. Bisherige Materialien und Randbedingungen wurden zurückgesetzt.',
+              );
+            }
+            setRestartDialog(false);
+          }}
         />
       )}
     </div>
