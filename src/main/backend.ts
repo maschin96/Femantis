@@ -11,7 +11,7 @@ import type {
   ModelDocument,
   ResultPacket,
 } from '../shared/types';
-import type { MeshSource } from './project-store';
+import { sealRun, sourceKey, verifyRunFiles, type MeshSource } from './project-store';
 import { canonicalModel } from '../shared/model';
 
 const count = z
@@ -159,6 +159,8 @@ const resultSchema = z.object({
   input_hash: z.string(),
   metrics: z.record(z.string(), z.record(z.string(), z.unknown())),
   limitations: z.array(z.string()),
+  point_count: count,
+  cell_count: count,
   fields: z.array(
     z.object({
       id: z.string(),
@@ -178,6 +180,8 @@ async function resultPacket(
   raw: unknown,
   runId: string,
   modelKey: string,
+  provenanceVerified: boolean,
+  provenanceSha256?: string,
 ): Promise<ResultPacket> {
   const manifest = resultSchema.parse(raw);
   const arrays: Record<string, Float64Array | Uint32Array> = {};
@@ -198,6 +202,7 @@ async function resultPacket(
     if (
       !(values instanceof Float64Array) ||
       values.length !== field.rows * field.components.length ||
+      field.rows !== (field.association === 'point' ? manifest.point_count : manifest.cell_count) ||
       values.some((value) => !Number.isFinite(value)) ||
       (field.mask && (!(activeMask instanceof Uint32Array) || activeMask.length !== field.rows))
     )
@@ -218,6 +223,8 @@ async function resultPacket(
     modelKey,
     inputHash: manifest.input_hash,
     physics: manifest.physics,
+    provenanceVerified,
+    ...(provenanceSha256 ? { provenanceSha256 } : {}),
     metrics: manifest.metrics,
     limitations: manifest.limitations,
     fields,
@@ -233,6 +240,7 @@ export async function calculateModel(
 ): Promise<ResultPacket> {
   const filename = path.join(directory, `mesh${path.extname(source.name).toLowerCase()}`);
   await writeFile(filename, source.bytes);
+  await writeFile(path.join(directory, 'model.json'), JSON.stringify(document, null, 2) + '\n');
   const snapshot = {
     ...document,
     mesh: { path: path.basename(filename), length_scale_to_m: source.scale },
@@ -244,21 +252,43 @@ export async function calculateModel(
     { ...options, timeout: 600_000 },
   );
   if (options.signal?.aborted) throw new Error('Berechnung abgebrochen.');
-  return resultPacket(directory, raw, runId, canonicalModel(document));
+  const modelKey = canonicalModel(document);
+  const provenanceSha256 = await sealRun(
+    { id: runId, directory, modelKey, sourceKey: sourceKey(source) },
+    source,
+    resultSchema.parse(raw).input_hash,
+  );
+  return resultPacket(directory, raw, runId, modelKey, true, provenanceSha256);
 }
 export async function loadCalculation(
   root: string,
   directory: string,
   runId: string,
   modelKey: string,
+  source: MeshSource,
+  provenanceSha256?: string,
 ): Promise<ResultPacket> {
+  const verified = await verifyRunFiles(
+    { id: runId, directory, modelKey, sourceKey: sourceKey(source), provenanceSha256 },
+    source,
+  );
   const temporary = await mkdtemp(path.join(tmpdir(), 'femantis-fields-'));
   try {
-    return await resultPacket(
-      temporary,
-      await requestBackend(root, 'readResult', { directory, outputDir: temporary }),
-      runId,
-      modelKey,
+    return await withMeshInput(source, async (filename) =>
+      resultPacket(
+        temporary,
+        await requestBackend(root, 'readResult', {
+          directory,
+          outputDir: temporary,
+          path: filename,
+          scale: source.scale,
+          physics: JSON.parse(modelKey).physics,
+        }),
+        runId,
+        modelKey,
+        verified,
+        provenanceSha256,
+      ),
     );
   } finally {
     await rm(temporary, { recursive: true, force: true });

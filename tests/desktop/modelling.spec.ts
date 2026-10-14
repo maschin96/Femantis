@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 let app: ElectronApplication;
@@ -82,6 +82,7 @@ test('Modelländerung kennzeichnet ältere Ergebnisse; Entwurf und Lauf bleiben 
   expect(document.schemaVersion).toBe(2);
   expect(document.model.materials.T.Werkstoff.conductivity).toBe(5);
   expect(document.run.id).toBeTruthy();
+  expect(document.run.provenanceSha256).toMatch(/^[a-f0-9]{64}$/);
   await app.evaluate(({ dialog }, filename) => {
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
   }, filename);
@@ -90,6 +91,21 @@ test('Modelländerung kennzeichnet ältere Ergebnisse; Entwurf und Lauf bleiben 
   await expect(page.locator('.result-status')).toContainText('Vorheriger Modellstand');
   await showModel();
   await calculate('temperature_K');
+});
+test('beschädigten Lauf vor der Anzeige abweisen', async () => {
+  const filename = path.join(folder, 'waerme.femantis.json');
+  const document = JSON.parse(await readFile(filename, 'utf8'));
+  const manifest = path.join(folder, document.run.path, 'result.json');
+  const result = JSON.parse(await readFile(manifest, 'utf8'));
+  result.physics = 'elasticity';
+  await writeFile(manifest, JSON.stringify(result));
+  await app.evaluate(({ dialog }, filename) => {
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
+  }, filename);
+  await page.getByRole('button', { name: 'Projekt öffnen', exact: true }).click();
+  await expect(page.locator('.message-list')).toContainText('result.json wurde verändert');
+  await expect(page.getByRole('combobox', { name: 'Ergebnisfeld' })).toHaveValue('temperature_K');
+  await expect(page.locator('.result-status')).toContainText('Aktueller Modellstand');
 });
 test('Elektrostatik aus dem gleichen Netz bearbeiten und berechnen', async () => {
   await showModel();

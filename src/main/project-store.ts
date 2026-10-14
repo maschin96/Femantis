@@ -14,6 +14,8 @@ import path from 'node:path';
 import { constants } from 'node:fs';
 import { parseProject, resolveMeshPath, viewSchema } from '../shared/project';
 import type { ViewState, ModelDocument } from '../shared/types';
+import { canonicalModel, parseModelDocument } from '../shared/model';
+import { z } from 'zod';
 
 export interface MeshSource {
   name: string;
@@ -27,6 +29,116 @@ export interface RunFiles {
   directory: string;
   modelKey: string;
   sourceKey: string;
+  provenanceSha256?: string;
+}
+
+const digestSchema = z.string().regex(/^[a-f0-9]{64}$/);
+const runProofSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().uuid(),
+  modelKey: z.string().max(2 * 1024 * 1024),
+  sourceKey: z.string(),
+  inputHash: digestSchema,
+  files: z.record(z.string(), digestSchema),
+});
+const runFileNames = (source: MeshSource): string[] => [
+  'model.json',
+  'case.json',
+  'case.toml',
+  `mesh${path.extname(source.name).toLowerCase()}`,
+  'result.json',
+  'result.vtu',
+];
+async function runBytes(directory: string, name: string): Promise<Buffer> {
+  const root = await realpath(directory);
+  const filename = path.join(root, name);
+  try {
+    resolveMeshPath(root, path.relative(root, await realpath(filename)));
+    return await readFile(filename);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+      throw new Error(`Die Laufdatei ${name} fehlt. Bitte neu berechnen.`, { cause: error });
+    throw error;
+  }
+}
+
+/** Bind immutable run artifacts to the successful solve, before publication. */
+export async function sealRun(
+  run: RunFiles,
+  source: MeshSource,
+  inputHash: string,
+): Promise<string> {
+  const files: Record<string, string> = {};
+  for (const name of runFileNames(source))
+    files[name] = sha256(await runBytes(run.directory, name));
+  const proof = runProofSchema.parse({
+    schemaVersion: 1,
+    id: run.id,
+    modelKey: run.modelKey,
+    sourceKey: run.sourceKey,
+    inputHash,
+    files,
+  });
+  const bytes = Buffer.from(JSON.stringify(proof, null, 2) + '\n', 'utf8');
+  await writeFile(path.join(run.directory, 'run.json'), bytes, { flag: 'wx' });
+  const digest = sha256(bytes);
+  await verifyRunFiles({ ...run, provenanceSha256: digest }, source);
+  return digest;
+}
+
+/** Legacy runs remain explicitly unverified; opening/saving cannot promote them. */
+export async function verifyRunFiles(run: RunFiles, source: MeshSource): Promise<boolean> {
+  if (run.sourceKey !== sourceKey(source))
+    throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
+  let proof: z.infer<typeof runProofSchema> | undefined;
+  if (run.provenanceSha256) {
+    const bytes = await runBytes(run.directory, 'run.json');
+    if (sha256(bytes) !== run.provenanceSha256)
+      throw new Error('Der Laufnachweis wurde verändert oder ist beschädigt. Bitte neu berechnen.');
+    try {
+      proof = runProofSchema.parse(JSON.parse(bytes.toString('utf8')));
+    } catch (error) {
+      throw new Error('Der Laufnachweis ist ungültig. Bitte neu berechnen.', { cause: error });
+    }
+    if (proof.id !== run.id || proof.modelKey !== run.modelKey || proof.sourceKey !== run.sourceKey)
+      throw new Error(
+        'Der Laufnachweis stimmt nicht mit der gespeicherten Modell-/Netzrevision überein.',
+      );
+    const names = runFileNames(source);
+    if (
+      Object.keys(proof.files).length !== names.length ||
+      names.some((name) => !Object.hasOwn(proof!.files, name))
+    )
+      throw new Error('Der Laufnachweis enthält nicht alle erforderlichen Artefakte.');
+    for (const name of names)
+      if (sha256(await runBytes(run.directory, name)) !== proof.files[name])
+        throw new Error(
+          `Eingabe- oder Ergebnisdatei ${name} wurde verändert oder ausgetauscht. Bitte neu berechnen.`,
+        );
+  }
+  const document = parseModelDocument(JSON.parse(run.modelKey));
+  const meshName = `mesh${path.extname(source.name).toLowerCase()}`;
+  if (sha256(await runBytes(run.directory, meshName)) !== sha256(source.bytes))
+    throw new Error('Das gerechnete Eingabenetz stimmt nicht mit dem Projektnetz überein.');
+  const expected = { ...document, mesh: { path: meshName, length_scale_to_m: source.scale } };
+  const snapshot = parseModelDocument(
+    JSON.parse((await runBytes(run.directory, 'case.json')).toString('utf8')),
+  );
+  if (canonicalModel(snapshot) !== canonicalModel(expected))
+    throw new Error('Der Eingabesnapshot stimmt nicht mit der gerechneten Modellrevision überein.');
+  if (
+    proof &&
+    canonicalModel(JSON.parse((await runBytes(run.directory, 'model.json')).toString('utf8'))) !==
+      run.modelKey
+  )
+    throw new Error('Der Laufnachweis enthält einen abweichenden Modellentwurf.');
+  const manifest = JSON.parse((await runBytes(run.directory, 'result.json')).toString('utf8'));
+  if (
+    manifest.physics !== document.physics ||
+    (proof && manifest.provenance?.input_sha256 !== proof.inputHash)
+  )
+    throw new Error('Das Ergebnisbündel gehört nicht zur gerechneten Physik oder Eingaberevision.');
+  return !!proof;
 }
 
 export async function readMeshSource(filename: string, scale: number): Promise<MeshSource> {
@@ -74,6 +186,7 @@ export async function openProjectFile(filename: string): Promise<{
     if (project.run.sourceKey !== sourceKey(source))
       throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
     run = { ...project.run, directory };
+    await verifyRunFiles(run, source);
   }
   return { name: project.name, source, view: project.view, model: project.model, run };
 }
@@ -86,6 +199,7 @@ export async function saveProjectFile(
   run?: RunFiles,
 ): Promise<void> {
   const root = await realpath(path.dirname(filename));
+  if (run) await verifyRunFiles(run, source);
   const digest = sha256(source.bytes);
   const folderName = `${path.basename(filename, '.json')}.files`;
   const folder = path.join(root, folderName);
@@ -113,9 +227,16 @@ export async function saveProjectFile(
     const runRoot = await realpath(run.directory);
     for (const file of await readdir(runRoot)) {
       if (
-        !['result.json', 'result.vtu', 'case.json', 'case.toml', 'mesh.msh', 'mesh.vtu'].includes(
-          file,
-        )
+        ![
+          'result.json',
+          'result.vtu',
+          'case.json',
+          'case.toml',
+          'mesh.msh',
+          'mesh.vtu',
+          'model.json',
+          'run.json',
+        ].includes(file)
       )
         continue;
       const original = path.join(runRoot, file);
@@ -135,7 +256,14 @@ export async function saveProjectFile(
         }
       }
     }
-    savedRun = { id: run.id, path: relative, modelKey: run.modelKey, sourceKey: run.sourceKey };
+    await verifyRunFiles({ ...run, directory: destination }, source);
+    savedRun = {
+      id: run.id,
+      path: relative,
+      modelKey: run.modelKey,
+      sourceKey: run.sourceKey,
+      ...(run.provenanceSha256 ? { provenanceSha256: run.provenanceSha256 } : {}),
+    };
   }
   const document = parseProject({
     schemaVersion: model || run ? 2 : 1,

@@ -121,7 +121,14 @@ function setupAPI(): void {
     const file = result.filePaths[0];
     const project = await openProjectFile(file);
     const calculation = project.run
-      ? await loadCalculation(root, project.run.directory, project.run.id, project.run.modelKey)
+      ? await loadCalculation(
+          root,
+          project.run.directory,
+          project.run.id,
+          project.run.modelKey,
+          project.source,
+          project.run.provenanceSha256,
+        )
       : null;
     const opened = await loaded(project.source, project.name, file, project.view);
     if (project.run) runs.set(project.run.id, project.run);
@@ -176,7 +183,13 @@ function setupAPI(): void {
         signal: controller.signal,
         onPhase: (event) => window.webContents.send('desktop:job', event),
       });
-      runs.set(id, { id, directory, modelKey: result.modelKey, sourceKey: sourceKey(source) });
+      runs.set(id, {
+        id,
+        directory,
+        modelKey: result.modelKey,
+        sourceKey: sourceKey(source),
+        provenanceSha256: result.provenanceSha256,
+      });
       dirty = true;
       return result;
     } catch (error) {

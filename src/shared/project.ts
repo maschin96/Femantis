@@ -31,6 +31,10 @@ const projectSchema = z.object({
       path: z.string(),
       modelKey: z.string().max(2 * 1024 * 1024),
       sourceKey: z.string(),
+      provenanceSha256: z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .optional(),
     })
     .optional(),
 });
