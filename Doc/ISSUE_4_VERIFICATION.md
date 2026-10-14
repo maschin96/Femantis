@@ -41,3 +41,7 @@ Windows/Linux, Installer und CI wurden nicht verifiziert; CI ist nicht eingerich
 Status: lokal verifiziert und zur unabhängigen Review vorbereitet. Eine unabhängige
 Review steht noch aus; im Repository ist nur der Autor als Collaborator verfügbar.
 Integration und Issue-Schließung bleiben bis zur Review offen.
+
+Nachtrag vom 14.10.2026: [PR #17](https://github.com/maschin96/Firmantis/pull/17)
+wurde als Commit `6a74f1d` in `main` integriert; Issue #4 ist geschlossen.
+Die Prüfziffern und der Status oben beschreiben den Stand vor dieser Integration.

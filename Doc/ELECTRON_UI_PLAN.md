@@ -2,7 +2,7 @@
 
 Stand: 12.10.2026 · Status: Architektur- und Umsetzungsplanung
 
-Umsetzung begonnen am 13.10.2026. Der aktuelle Stand des ersten Desktop-/Viewer-Schnitts steht in [IMPLEMENTATION.md](IMPLEMENTATION.md); diese Datei bleibt die Planungsbaseline.
+Umsetzung begonnen am 13.10.2026. Der erste Desktop-/Viewer-Schnitt steht in [IMPLEMENTATION.md](IMPLEMENTATION.md), der datierte aktuelle Überblick in [PROJECT_STATUS.md](PROJECT_STATUS.md); diese Datei bleibt die Planungsbaseline.
 
 ## 1. Ziel und geprüfte Grundlage
 

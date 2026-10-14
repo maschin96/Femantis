@@ -1,8 +1,8 @@
 # Erster Umsetzungsschnitt: Desktop und Netzviewer
 
-Fortsetzung mit Version 0.2: [Modellerstellung, Bearbeitung und Berechnung](MODELLING_IMPLEMENTATION.md). Die folgenden Angaben dokumentieren den ersten Viewer-Schnitt; die neuere Datei beschreibt den aktuellen Rechenumfang.
+Fortsetzung mit Version 0.2: [Modellerstellung, Bearbeitung und Berechnung](MODELLING_IMPLEMENTATION.md). Die folgenden Angaben dokumentieren den ersten Viewer-Schnitt vom 13.10.2026; der [aktuelle Projektstand](PROJECT_STATUS.md) trennt spätere GitHub-Integration und offene Abnahmegates davon.
 
-Arbeitsbeginn: 13.10.2026. Lokale Arbeitspakete D0–D2 gemäß `ELECTRON_UI_PLAN.md`; dieses Desktopprojekt besitzt noch kein eigenes GitHub-Repository. Die FEM-Toolbox wird als eingefrorene Abhängigkeit verwendet und nicht geändert. Für die lokale Umsetzung dient dieses Dokument als Arbeitspaket; vor einer späteren GitHub-Integration sind Repository, Issues und Integrationsbranch zuzuordnen.
+Arbeitsbeginn: 13.10.2026. Lokale Arbeitspakete D0–D2 gemäß `ELECTRON_UI_PLAN.md`. Zum Zeitpunkt dieses ersten Viewer-Schnitts besaß das Desktopprojekt noch kein eigenes GitHub-Repository; seit dem 13.10.2026 liegt es unter [maschin96/Firmantis](https://github.com/maschin96/Firmantis). Die FEM-Toolbox wird als eingefrorene Abhängigkeit verwendet und nicht geändert. Die damalige offene Zuordnung zu Issues und Integrationsbranch ist eine historische Aussage, kein heutiger Status.
 
 ## Ziel und Akzeptanz
 
@@ -28,7 +28,7 @@ Das Beispiel Tet4 umfasst 108 Knoten, 288 Zellen und 184 Außenflächen; das Tet
 
 Projektdatei: `.femantis.json` mit Desktop-Schema 1, Maßstab, Kamera und Gruppensichtbarkeit. Zugehöriger `.files`-Ordner enthält eine unveränderte, SHA-256-identifizierte Netzdatei. Beschädigte Dateien und Pfade außerhalb des Projektverzeichnisses werden abgelehnt. Backend-Anfragen werden über einen eigenen stdio-Prozess abgewickelt; große Koordinaten-/Indexarrays werden binär übertragen.
 
-### Bisherige Prüfergebnisse
+### Prüfergebnisse des ersten Viewer-Schnitts (13.10.2026)
 
 - Python: 8 Tests bestanden. Zuerst schlugen 5 Akzeptanzfälle wegen der noch fehlenden Netz-/Binärimplementierung fehl; anschließend bestanden diese und die ergänzten Fehler-/Protokollprüfungen.
 - TypeScript/Integration: 11 Tests bestanden, einschließlich echter Python-Aufrufe, überlappender Tet10-Gruppen und Projektspeicherung mit Hash-/Symlinkprüfung.
@@ -46,4 +46,4 @@ Die langsame Electron-Installation wurde abgeschlossen und die Laufzeit gegen di
 
 ### Grenzen dieses Schnitts
 
-Keine Solver-/Ergebnisoberfläche und kein CAD-Kern. Keine Prüfung des 100.000-Zellen-/30-FPS-Ziels oder von Installationspaketen. Python-/Frontend-Abhängigkeiten sind für den lokalen Stand fixiert; numerische Kernverifikation und experimentelle Validierung werden durch den Viewer nicht erweitert. Entwicklung und Adapterprüfungen liefen auf macOS/Apple Silicon; Windows/Linux sind noch nicht praktisch geprüft. Das Projekt besitzt noch keinen Commit, kein PR und kein eigenes GitHub-Issue.
+Dieser Schnitt enthielt noch keine Solver-/Ergebnisoberfläche und keinen CAD-Kern. Keine Prüfung des 100.000-Zellen-/30-FPS-Ziels oder von Installationspaketen. Python-/Frontend-Abhängigkeiten waren für den damaligen lokalen Stand fixiert; numerische Kernverifikation und experimentelle Validierung wurden durch den Viewer nicht erweitert. Entwicklung und Adapterprüfungen liefen auf macOS/Apple Silicon; Windows/Linux waren nicht praktisch geprüft. Die damalige Aussage „kein Commit, PR oder GitHub-Issue“ galt nur vor der Repository-Einrichtung. Spätere Modellfunktionen und Integration sind im [Projektstand](PROJECT_STATUS.md) verzeichnet.

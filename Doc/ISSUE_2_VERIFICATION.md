@@ -43,3 +43,7 @@ wurden nicht geprüft. CI ist weiterhin nicht eingerichtet.
 Status: lokal verifiziert und zur unabhängigen Review vorbereitet. Im Repository
 ist nur der Autor als Collaborator verfügbar; eine unabhängige Review liegt noch
 nicht vor. Integration und Issue-Schließung bleiben bis zur Review offen.
+
+Nachtrag vom 14.10.2026: [PR #16](https://github.com/maschin96/Firmantis/pull/16)
+wurde als Commit `cc6cb25` in `main` integriert; Issue #2 ist geschlossen.
+Die Prüfziffern und der Status oben beschreiben den Stand vor dieser Integration.
