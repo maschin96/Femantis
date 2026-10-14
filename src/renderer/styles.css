@@ -254,6 +254,14 @@
   font-size: 20px;
   margin-top: 0;
 }
+
+.model-restart-dialog {
+  color: #17333f;
+  border: 1px solid #dce8e4;
+}
+.model-restart-dialog::backdrop {
+  background: #0008;
+}
 .box-dialog h3 {
   font-size: 12px;
   margin-top: 22px;
