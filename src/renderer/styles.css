@@ -1601,3 +1601,85 @@ dd {
     transition: none !important;
   }
 }
+
+/* Run history (#7) */
+.run-history {
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: var(--r-l);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.run-history ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.run-history li {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-radius: var(--r-m, 12px);
+  border: 1px solid var(--line);
+}
+.run-history li.selected {
+  border-color: var(--accent-ink);
+}
+.run-select {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11px;
+  color: var(--ink-2);
+  background: transparent;
+}
+.run-select:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.run-select b {
+  font-size: 12px;
+  color: var(--ink);
+}
+.run-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.run-badges .badge,
+.run-badges .stale-badge {
+  margin-bottom: 0;
+}
+.run-remove {
+  padding: 0 10px;
+  color: var(--ink-3);
+  background: transparent;
+}
+.run-cache {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.run-cache button {
+  font-size: 11px;
+  padding: 6px 12px;
+}
+.run-note {
+  margin: 10px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}

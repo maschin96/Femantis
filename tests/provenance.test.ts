@@ -94,6 +94,7 @@ describe('Bindung an den tatsächlich gerechneten Eingabesnapshot', () => {
     const changed = structuredClone(model);
     changed.boundary!.dirichlet[1].value = 400;
     saved.document.run.modelKey = canonicalModel(changed);
+    saved.document.runs[0].modelKey = saved.document.run.modelKey; // consistent forgery
     await writeFile(saved.filename, JSON.stringify(saved.document));
     await expect(openProjectFile(saved.filename)).rejects.toThrow('Laufnachweis');
   });
@@ -123,6 +124,7 @@ describe('Bindung an den tatsächlich gerechneten Eingabesnapshot', () => {
   it('markiert alte Schema-2-Läufe ohne Vertrauensanker ausdrücklich als ungeprüft', async () => {
     const saved = await project();
     delete saved.document.run.provenanceSha256;
+    delete saved.document.runs; // projects before #7 had no run history
     await writeFile(saved.filename, JSON.stringify(saved.document));
     await rm(path.join(saved.directory, 'run.json'));
     await rm(path.join(saved.directory, 'model.json'));

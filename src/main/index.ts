@@ -11,6 +11,7 @@ import {
   loadCalculation,
 } from './backend';
 import {
+  describeRun,
   openProjectFile,
   readMeshSource,
   saveProjectFile,
@@ -18,10 +19,17 @@ import {
   type MeshSource,
   type RunFiles,
 } from './project-store';
-import { defaultView, type ViewState } from '../shared/types';
+import { RunCache } from './run-cache';
+import {
+  defaultView,
+  type Physics,
+  type RunHistory,
+  type RunSummary,
+  type ViewState,
+} from '../shared/types';
 import { viewSchema, resolveMeshPath } from '../shared/project';
 import { parseModelDocument } from '../shared/model';
-import { mkdir, mkdtemp, readFile, writeFile, rm, realpath, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm, realpath, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 
@@ -34,7 +42,74 @@ let projectPath: string | null = null;
 let dirty = false;
 let operationPending = false;
 let activeJob: AbortController | null = null;
-const runs = new Map<string, RunFiles>();
+
+/**
+ * Run history of the open workspace, oldest first. Unsaved runs live in this
+ * instance's cache session; after saving, entries point at the project copies.
+ */
+interface RunEntry extends RunFiles {
+  stored: RunSummary['stored'];
+  summary: Omit<RunSummary, 'stored'>;
+}
+let runs: RunEntry[] = [];
+let selectedRunId: string | null = null;
+let cacheReady: Promise<RunCache> | null = null;
+function runCache(): Promise<RunCache> {
+  if (!cacheReady) {
+    const configured = process.env.FEMANTIS_RUN_CACHE;
+    if (configured && !path.isAbsolute(configured))
+      throw new Error('FEMANTIS_RUN_CACHE muss ein absoluter Pfad sein.');
+    cacheReady = RunCache.open(configured || path.join(root, '.cache/runs')).then(async (cache) => {
+      // Sessions of crashed or closed instances are unreachable; legacy runs stay
+      // until the user cleans the cache explicitly.
+      await cache.prune([], { legacy: false });
+      return cache;
+    });
+  }
+  return cacheReady;
+}
+async function runEntry(
+  run: RunFiles,
+  current: MeshSource,
+  stored: RunSummary['stored'],
+): Promise<RunEntry> {
+  const described = await describeRun(run, current);
+  return {
+    ...run,
+    stored,
+    summary: {
+      id: run.id,
+      createdAt: run.createdAt ?? null,
+      physics: described.physics as Physics,
+      inputHash: described.inputHash,
+      modelKey: run.modelKey,
+      provenanceVerified: described.verified,
+    },
+  };
+}
+async function history(): Promise<RunHistory> {
+  return {
+    runs: runs.map((entry) => ({ ...entry.summary, stored: entry.stored })),
+    selectedRunId,
+    cache: await (await runCache()).usage(),
+  };
+}
+/** Replace the workspace's runs; unsaved runs of the previous workspace are deleted. */
+async function replaceRuns(next: RunEntry[], selected: string | null): Promise<void> {
+  const previous = runs;
+  runs = next;
+  selectedRunId = selected;
+  const cache = await runCache();
+  for (const entry of previous)
+    if (entry.stored === 'cache' && !next.some((run) => run.directory === entry.directory))
+      await cache.discard(entry.directory);
+}
+function findRun(value: unknown): RunEntry {
+  const id = z.string().uuid().parse(value);
+  const entry = runs.find((run) => run.id === id);
+  if (!entry) throw new Error('Dieser Berechnungslauf ist nicht verfügbar.');
+  return entry;
+}
 
 function allowDiscard(): boolean {
   if (!dirty) return true;
@@ -51,10 +126,17 @@ function allowDiscard(): boolean {
   );
 }
 
-async function loaded(next: MeshSource, name: string, filename: string | null, view: ViewState) {
+async function loaded(
+  next: MeshSource,
+  name: string,
+  filename: string | null,
+  view: ViewState,
+  nextRuns?: { runs: RunEntry[]; selected: string | null },
+) {
   const status = await backendStatus(root);
   if (!status.available) throw new Error(status.message || 'FEM-Toolbox nicht verfügbar.');
   const mesh = await importMesh(root, next.bytes, next.name, next.scale);
+  await replaceRuns(nextRuns?.runs ?? [], nextRuns?.selected ?? null);
   source = next;
   projectPath = filename;
   dirty = filename === null;
@@ -69,7 +151,12 @@ function register(channel: string, handler: (...args: unknown[]) => Promise<unkn
       event.senderFrame !== window.webContents.mainFrame
     )
       throw new Error('Ungültiger Desktopaufruf.');
-    const exclusive = !['desktop:dirty', 'desktop:status', 'desktop:cancel'].includes(channel);
+    const exclusive = ![
+      'desktop:dirty',
+      'desktop:status',
+      'desktop:cancel',
+      'desktop:runs',
+    ].includes(channel);
     if (operationPending && exclusive) throw new Error('Bitte den laufenden Vorgang abwarten.');
     if (exclusive) operationPending = true;
     try {
@@ -130,8 +217,12 @@ function setupAPI(): void {
           project.run.provenanceSha256,
         )
       : null;
-    const opened = await loaded(project.source, project.name, file, project.view);
-    if (project.run) runs.set(project.run.id, project.run);
+    const entries = [];
+    for (const run of project.runs) entries.push(await runEntry(run, project.source, 'project'));
+    const opened = await loaded(project.source, project.name, file, project.view, {
+      runs: entries,
+      selected: project.run?.id ?? null,
+    });
     return { ...opened, model: project.model || null, result: calculation };
   });
   const save = async (value: unknown, modelValue?: unknown, runValue?: unknown) => {
@@ -150,10 +241,18 @@ function setupAPI(): void {
         : `${result.filePath}.femantis.json`;
     }
     const model = modelValue == null ? null : parseModelDocument(modelValue);
-    const runId = runValue == null ? null : z.string().uuid().parse(runValue);
-    const run = runId ? runs.get(runId) : undefined;
-    if (runId && !run) throw new Error('Dieser Berechnungslauf ist nicht verfügbar.');
-    await saveProjectFile(target, source, view, model, run);
+    const run = runValue == null ? undefined : findRun(runValue);
+    const saved = await saveProjectFile(target, source, view, model, run, run ? runs : []);
+    // The project copies are now authoritative; their cache originals are released.
+    if (run)
+      await replaceRuns(
+        runs.map((entry, index) => ({
+          ...entry,
+          directory: saved[index].directory,
+          stored: 'project',
+        })),
+        run.id,
+      );
     projectPath = target;
     dirty = false;
     return { path: target, name: path.basename(target, '.femantis.json') };
@@ -174,8 +273,8 @@ function setupAPI(): void {
     if (!source) throw new Error('Bitte zuerst ein Netz öffnen.');
     const document = parseModelDocument(value);
     const id = randomUUID();
-    const directory = path.join(root, '.cache/runs', id);
-    await mkdir(directory, { recursive: true });
+    const cache = await runCache();
+    const directory = await cache.createRunDirectory(id);
     const controller = new AbortController();
     activeJob = controller;
     try {
@@ -183,21 +282,63 @@ function setupAPI(): void {
         signal: controller.signal,
         onPhase: (event) => window.webContents.send('desktop:job', event),
       });
-      runs.set(id, {
-        id,
-        directory,
-        modelKey: result.modelKey,
-        sourceKey: sourceKey(source),
-        provenanceSha256: result.provenanceSha256,
-      });
+      const entry = await runEntry(
+        {
+          id,
+          directory,
+          modelKey: result.modelKey,
+          sourceKey: sourceKey(source),
+          provenanceSha256: result.provenanceSha256,
+          createdAt: new Date().toISOString(),
+        },
+        source,
+        'cache',
+      );
+      runs = [...runs, entry];
+      selectedRunId = id;
       dirty = true;
       return result;
     } catch (error) {
-      await rm(directory, { recursive: true, force: true });
+      await cache.discard(directory);
       throw error;
     } finally {
       activeJob = null;
     }
+  });
+  register('desktop:runs', () => history());
+  register('desktop:selectRun', async (value) => {
+    if (!source) throw new Error('Bitte zuerst ein Netz öffnen.');
+    const entry = findRun(value);
+    const result = await loadCalculation(
+      root,
+      entry.directory,
+      entry.id,
+      entry.modelKey,
+      source,
+      entry.provenanceSha256,
+    );
+    selectedRunId = entry.id;
+    return result;
+  });
+  register('desktop:removeRun', async (value) => {
+    const entry = findRun(value);
+    if (entry.id === selectedRunId)
+      throw new Error(
+        'Der angezeigte Lauf kann nicht entfernt werden. Bitte zuerst einen anderen wählen.',
+      );
+    // Project copies stay on disk; only the history entry is dropped.
+    await replaceRuns(
+      runs.filter((run) => run !== entry),
+      selectedRunId,
+    );
+    return history();
+  });
+  register('desktop:cleanRunCache', async () => {
+    const cache = await runCache();
+    const removed = await cache.prune(
+      runs.filter((run) => run.stored === 'cache').map((run) => run.directory),
+    );
+    return { removed, history: await history() };
   });
   register('desktop:box', async (value) => {
     const number = z.number().finite().positive();
@@ -357,6 +498,17 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+let cacheClosed = false;
+app.on('will-quit', (event) => {
+  if (!cacheReady || cacheClosed) return;
+  event.preventDefault();
+  cacheClosed = true;
+  // Unsaved runs end with the session; a crash leaves them for the next startup.
+  void cacheReady
+    .then((cache) => cache.close())
+    .catch(() => {})
+    .finally(() => app.quit());
 });
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
