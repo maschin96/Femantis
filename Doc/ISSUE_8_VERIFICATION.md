@@ -69,7 +69,8 @@ eigener Python-Prozess. Speicher nach dem Laden:
    des Nutzers bleibt die Toolbox-Topologie maßgeblich; Desktop dupliziert sie
    nicht. Geändert ist nur das Importlimit: `importTimeout` = 120 s + 30 s/MiB,
    höchstens 60 min, also mindestens doppelte Reserve zur gemessenen Rate. Die
-   Beschleunigung ist Folgearbeit in der FEM-Toolbox.
+   Beschleunigung ist Folgearbeit in der FEM-Toolbox
+   ([maschin96/FEM-Toolbox#287](https://github.com/maschin96/FEM-Toolbox/issues/287)).
 2. **Ansichtsaufbau (Renderer).** `setView` baute alle Puffer mit Arrays je Knoten,
    String-Kantenschlüsseln, `Set`-Gruppen und `push(...)` neu auf, `setSelected`
    suchte linear. `src/renderer/viewer/display.ts` erzeugt dieselben Puffer jetzt
@@ -102,7 +103,7 @@ beides durch die Toolbox-Topologie bestimmt.
 Grenzen bei 1M (Grenzermittlung, kein Produktversprechen): Laden 2–3 min mit
 Busy-Anzeige und ohne Abbruchmöglichkeit. Bei 675k Außendreiecken dauert jede
 Ansichtsänderung noch 0,2–0,5 s, und der Main-Prozess braucht 760 MB.
-Folgearbeit: vektorisierte Randtopologie in der Toolbox; im Viewer inkrementelle
+Folgearbeit: vektorisierte Randtopologie in der Toolbox (FEM-Toolbox#287); im Viewer inkrementelle
 Farb-/Feldaktualisierung statt Neuaufbau, wenn größere Oberflächen nötig werden.
 
 ## Korrektheit
