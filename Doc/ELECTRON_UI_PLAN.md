@@ -68,6 +68,8 @@ Die Oberfläche folgt dem Arbeitsablauf **Projekt → Netz → Physik → Materi
 
 Den vorhandenen [Femantis-CI-Leitfaden](https://github.com/maschin96/FEM-Toolbox/blob/baae07f088a87ce6e256af3c5855a3b110d0f17a/Doc/75_FEMANTIS_CORPORATE_IDENTITY.md) übernehmen: Petrol `#0B1F2A` für Navigation und Text, Grün `#2ECC71` für Aktionen mit Petroltext, Blau `#4B8BBE` für ergänzende Akzente, Weiß und `#E5E7EB` für Arbeitsflächen und Trennlinien. Inter mit Lizenzdatei bündeln oder zunächst Systemschrift verwenden. Wissenschaftliche Farbskalen richten sich nach den Feldern, nicht nach der Markenfarbe. Produktionsfertige Logo-/Icondateien sind im Quellbestand noch ein Backlog.
 
+Umgesetzt (Issue #24): Liquid-Glass-Oberfläche. Transluzente, weichgezeichnete Panels schweben mit Abstand über einem ruhigen Farbverlauf; Steuerelemente sind Kapseln, Segmentschalter und schwebende Viewer-Werkzeuge. Primäraktionen bleiben CI-Grün mit Petroltext. Die 3D-Zeichenfläche bleibt deckend, damit Feldfarben nicht durch Glas verfälscht werden. Auf macOS dient die Kopfzeile als integrierte Titelleiste. Führung: Ablaufleiste mit erledigten Schritten, Karte „Nächster Schritt“ mit genau einer empfohlenen Aktion, gebündelte Netzquellen (Import, Quader, Beispiele) und eine einklappbare Meldungskonsole, die sich bei neuen Fehlern öffnet. Kein Dark Mode.
+
 ## 4. Technische Architektur
 
 **Empfehlung:** Electron + TypeScript + React + Vite für die Desktopoberfläche, Three.js als gekapselte Viewer-Komponente und ein separater Python-Prozess als Toolbox-Adapter. Electron Forge für Paketierung zunächst evaluieren; konkrete Versionen erst beim Projektstart kompatibel auswählen und fixieren.
