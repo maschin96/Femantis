@@ -47,6 +47,15 @@ Farbskalenberechnung und Viewer-Interpolation.
 
 Benchmarks entfallen: keine Änderung an Topologie oder Binärübertragung.
 
+## CI-Befund
+
+Der erste CI-Lauf von PR #25 (Run 39289329126) scheiterte nur im Job „Desktop ·
+macOS 15“: Der erste Electron-Start wartete 5 s auf das Beispielnetz und sah noch
+„—“. Derselbe Fehler trat vorher unabhängig von dieser Änderung auf `main` auf
+(Run 39285725120). Ursache ist der kalte Start von Python und Toolbox auf dem
+Runner. `tests/desktop/startup.ts` gibt ausschließlich den Startwartezeiten 30 s;
+Prüfungen nach Benutzeraktionen behalten den Standard.
+
 ## Nachweise
 
 Screenshots aus dem echten Electron/WebGL-Fenster (Seiteninhalt ohne native
