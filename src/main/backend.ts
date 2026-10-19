@@ -13,6 +13,7 @@ import type {
 } from '../shared/types';
 import { sealRun, sourceKey, verifyRunFiles, type MeshSource } from './project-store';
 import { canonicalModel } from '../shared/model';
+import { DiagnosticError, diagnosticFromBackend } from '../shared/diagnostics';
 
 const count = z
   .number()
@@ -129,8 +130,11 @@ export async function requestBackend(
           );
         const response = JSON.parse(output + pending);
         if (response.id !== id) throw new Error('Unpassende Antwort der Python-Anbindung.');
-        if (response.error)
+        if (response.error) {
+          const diagnostic = diagnosticFromBackend(response.error.diagnostic);
+          if (diagnostic) throw new DiagnosticError(diagnostic);
           throw new Error(`${response.error.category}: ${response.error.message}`);
+        }
         resolve(response.result);
       } catch (error) {
         reject(error);

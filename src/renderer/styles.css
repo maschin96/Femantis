@@ -1207,13 +1207,44 @@ dd {
   flex-shrink: 0;
   color: #2fa366;
 }
-.message > p {
+.message-body {
+  min-width: 0;
+}
+.message-body > p {
   margin: 0;
   color: #627f8d;
 }
 .message.error > svg,
-.message.error > p {
+.message.error .message-body > p {
   color: #b65c47;
+}
+.diagnostic {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  color: #627f8d;
+}
+.diagnostic code {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.diagnostic span code + code {
+  margin-left: 6px;
+}
+.diagnostic button {
+  font-size: 10px;
+  padding: 1px 8px;
+}
+.diagnostic details {
+  flex-basis: 100%;
+}
+.diagnostic summary {
+  cursor: pointer;
+}
+[data-diagnostic-target] {
+  outline: 2px solid #b65c47;
+  outline-offset: 2px;
 }
 .no-messages {
   padding-top: 10px;

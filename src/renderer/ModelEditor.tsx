@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, Check, Play, FileDown, FolderOpen } from 'lucide-react';
 import type { MeshPacket, ModelDocument, Physics, JsonValue } from '../shared/types';
 import { fieldOf, newModel, parseModelDocument, physicsLabels } from '../shared/model';
+import { focusPath } from '../shared/diagnostics';
 
 interface Props {
   mesh: MeshPacket;
@@ -13,17 +14,21 @@ interface Props {
   onOpen: () => void;
   onExport: () => void;
   onPendingChange: (value: boolean) => void;
+  focusRequest?: { paths: string[]; nonce: number } | null;
+  onFocusHandled?: () => void;
 }
 export function NumericInput({
   label,
   value,
   onChange,
   disabled = false,
+  path,
 }: {
   label: string;
   value: unknown;
   onChange: (value: number) => void;
   disabled?: boolean;
+  path?: string;
 }) {
   const [text, setText] = useState(String(value ?? ''));
   useEffect(() => setText(typeof value === 'number' ? String(value) : ''), [value]);
@@ -32,6 +37,7 @@ export function NumericInput({
       {label}
       <input
         aria-label={label}
+        data-model-path={path}
         type="number"
         step="any"
         value={text}
@@ -69,7 +75,43 @@ export function ModelEditor(props: Props) {
     setText(JSON.stringify(doc, null, 2));
     setError('');
     setPending(false);
+    root.current
+      ?.querySelectorAll('[data-diagnostic-target]')
+      .forEach((element) => element.removeAttribute('data-diagnostic-target'));
   }, [doc]);
+  // Diagnostic navigation: data-model-path mirrors the Toolbox data paths, so the
+  // most specific rendered ancestor receives focus; otherwise the full dataset.
+  const root = useRef<HTMLDivElement>(null);
+  const dataset = useRef<HTMLTextAreaElement>(null);
+  const [datasetFocus, setDatasetFocus] = useState(0);
+  const highlight = (element: HTMLElement) => {
+    root.current
+      ?.querySelectorAll('[data-diagnostic-target]')
+      .forEach((item) => item.removeAttribute('data-diagnostic-target'));
+    element.setAttribute('data-diagnostic-target', '');
+    element.scrollIntoView({ block: 'center' });
+    element.focus({ preventScroll: true });
+  };
+  useEffect(() => {
+    const request = props.focusRequest;
+    if (!request || !root.current) return;
+    props.onFocusHandled?.();
+    const targets = new Map(
+      Array.from(root.current.querySelectorAll<HTMLElement>('[data-model-path]')).map((element) => [
+        element.dataset.modelPath!,
+        element,
+      ]),
+    );
+    const target = focusPath(request.paths, new Set(targets.keys()));
+    if (target) highlight(targets.get(target)!);
+    else {
+      setAdvanced(true);
+      setDatasetFocus((value) => value + 1);
+    }
+  }, [props.focusRequest]);
+  useEffect(() => {
+    if (datasetFocus && dataset.current) highlight(dataset.current);
+  }, [datasetFocus]);
   const update = (edit: (next: ModelDocument) => void) => {
     const next = structuredClone(doc);
     edit(next);
@@ -139,7 +181,7 @@ export function ModelEditor(props: Props) {
     doc.physics === 'heat' ? 'W/m^3' : doc.physics === 'elasticity' ? 'N/m^3' : 'C/m^3';
   const loadValue = doc.loads?.[loadName]?.value ?? (doc.physics === 'elasticity' ? [0, 0, 0] : 0);
   return (
-    <div className="model-editor">
+    <div className="model-editor" ref={root}>
       <div className="editor-title">
         <div>
           <span>MODELL · STATIONÄR</span>
@@ -170,6 +212,7 @@ export function ModelEditor(props: Props) {
               Physik
               <select
                 aria-label="Physik"
+                data-model-path="physics"
                 value={doc.physics}
                 onChange={(event) => props.onChange(newModel(mesh, event.target.value as Physics))}
               >
@@ -185,7 +228,7 @@ export function ModelEditor(props: Props) {
               Randbedingungen an. Berechnung: linear, stationär, SI.
             </p>
           </section>
-          <section className="editor-card">
+          <section className="editor-card" data-model-path="materials" tabIndex={-1}>
             <div className="editor-card-title">
               <h3>Materialien</h3>
               <button
@@ -205,7 +248,12 @@ export function ModelEditor(props: Props) {
               </button>
             </div>
             {Object.entries(catalog).map(([name, material]) => (
-              <div className="material-row" key={name}>
+              <div
+                className="material-row"
+                key={name}
+                data-model-path={`materials.${field}.${name}`}
+                tabIndex={-1}
+              >
                 <div className="material-name">
                   <b>{name}</b>
                   <button
@@ -225,6 +273,7 @@ export function ModelEditor(props: Props) {
                     <NumericInput
                       label={`${name} · Leitfähigkeit [W/(m K)]`}
                       value={material.conductivity}
+                      path={`materials.${field}.${name}.conductivity`}
                       onChange={(v) => matChange(name, 'conductivity', v)}
                     />
                   )}
@@ -232,6 +281,7 @@ export function ModelEditor(props: Props) {
                     <>
                       <NumericInput
                         label={`${name} · E-Modul [GPa]`}
+                        path={`materials.${field}.${name}.young`}
                         value={
                           typeof material.young === 'number'
                             ? material.young / (material.unit === 'Pa' ? 1e9 : 1)
@@ -244,6 +294,7 @@ export function ModelEditor(props: Props) {
                       <NumericInput
                         label={`${name} · Poissonzahl`}
                         value={material.poisson}
+                        path={`materials.${field}.${name}.poisson`}
                         onChange={(v) => matChange(name, 'poisson', v)}
                       />
                     </>
@@ -252,6 +303,7 @@ export function ModelEditor(props: Props) {
                     <NumericInput
                       label={`${name} · Permittivität [${material.unit === 'relative' ? 'relativ' : 'F/m'}]`}
                       value={material.permittivity}
+                      path={`materials.${field}.${name}.permittivity`}
                       onChange={(v) => matChange(name, 'permittivity', v)}
                     />
                   )}
@@ -266,28 +318,31 @@ export function ModelEditor(props: Props) {
                 )}
               </div>
             ))}
-            <h4>Materialzuordnung zu Volumengruppen</h4>
-            {mesh.groups
-              .filter((group) => group.kind === 'volume')
-              .map((group) => (
-                <label className="region-assignment" key={group.key}>
-                  <span>{group.name}</span>
-                  <select
-                    aria-label={`Material für ${group.name}`}
-                    value={doc.regions[field]?.[group.name] || ''}
-                    onChange={(event) =>
-                      update((next) => {
-                        next.regions[field][group.name] = event.target.value;
-                      })
-                    }
-                  >
-                    <option value="">Nicht zugeordnet</option>
-                    {Object.keys(catalog).map((name) => (
-                      <option key={name}>{name}</option>
-                    ))}
-                  </select>
-                </label>
-              ))}
+            <div data-model-path={`regions.${field}`} tabIndex={-1}>
+              <h4>Materialzuordnung zu Volumengruppen</h4>
+              {mesh.groups
+                .filter((group) => group.kind === 'volume')
+                .map((group) => (
+                  <label className="region-assignment" key={group.key}>
+                    <span>{group.name}</span>
+                    <select
+                      aria-label={`Material für ${group.name}`}
+                      data-model-path={`regions.${field}.${group.name}`}
+                      value={doc.regions[field]?.[group.name] || ''}
+                      onChange={(event) =>
+                        update((next) => {
+                          next.regions[field][group.name] = event.target.value;
+                        })
+                      }
+                    >
+                      <option value="">Nicht zugeordnet</option>
+                      {Object.keys(catalog).map((name) => (
+                        <option key={name}>{name}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+            </div>
             {!mesh.groups.some((group) => group.kind === 'volume') && (
               <p className="editor-warning">
                 Dieses Netz benötigt benannte Volumengruppen für die Materialzuordnung. Alternativ
@@ -295,7 +350,7 @@ export function ModelEditor(props: Props) {
               </p>
             )}
           </section>
-          <section className="editor-card">
+          <section className="editor-card" data-model-path="boundary" tabIndex={-1}>
             <h3>Randbedingungen</h3>
             <div className="add-boundary">
               {boundaryKinds.map((kind) => (
@@ -307,7 +362,12 @@ export function ModelEditor(props: Props) {
             </div>
             {boundaryKinds.flatMap((kind) =>
               (doc.boundary?.[kind] || []).map((entry, index) => (
-                <div className="boundary-row" key={`${kind}-${index}`}>
+                <div
+                  className="boundary-row"
+                  key={`${kind}-${index}`}
+                  data-model-path={`boundary.${kind}[${index}]`}
+                  tabIndex={-1}
+                >
                   <div className="material-name">
                     <b>
                       {conditionName[kind]} {index + 1}
@@ -328,6 +388,7 @@ export function ModelEditor(props: Props) {
                       Flächengruppe
                       <select
                         aria-label={`${kind} ${index + 1} · Flächengruppe`}
+                        data-model-path={`boundary.${kind}[${index}].set`}
                         value={String(entry.set)}
                         onChange={(event) =>
                           changeCondition(kind, index, 'set', event.target.value)
@@ -365,11 +426,13 @@ export function ModelEditor(props: Props) {
                       <NumericInput
                         label={`Konvektion ${index + 1} · h [W/(m² K)]`}
                         value={entry.coefficient}
+                        path={`boundary.${kind}[${index}].coefficient`}
                         onChange={(v) => changeCondition(kind, index, 'coefficient', v)}
                       />
                       <NumericInput
                         label={`Konvektion ${index + 1} · Umgebung [K]`}
                         value={entry.ambient_temperature}
+                        path={`boundary.${kind}[${index}].ambient_temperature`}
                         onChange={(v) => changeCondition(kind, index, 'ambient_temperature', v)}
                       />
                     </div>
@@ -377,6 +440,7 @@ export function ModelEditor(props: Props) {
                     <NumericInput
                       label={`${conditionName[kind]} ${index + 1} · Wert [${entry.unit}]`}
                       value={entry.value}
+                      path={`boundary.${kind}[${index}].value`}
                       onChange={(v) => changeCondition(kind, index, 'value', v)}
                     />
                   )}
@@ -416,7 +480,7 @@ export function ModelEditor(props: Props) {
               </p>
             )}
           </section>
-          <section className="editor-card">
+          <section className="editor-card" data-model-path="loads" tabIndex={-1}>
             <h3>Volumenlasten / Quellen</h3>
             {doc.physics === 'elasticity' ? (
               <div className="input-grid three">
@@ -440,6 +504,7 @@ export function ModelEditor(props: Props) {
               <NumericInput
                 label={`${doc.physics === 'heat' ? 'Wärmequelle' : 'Volumenladung'} [${loadUnit}]`}
                 value={loadValue}
+                path={`loads.${loadName}.value`}
                 onChange={(v) =>
                   update((next) => {
                     next.loads ||= {};
@@ -464,6 +529,7 @@ export function ModelEditor(props: Props) {
             </p>
             <textarea
               aria-label="Vollständiger Model-Datensatz"
+              ref={dataset}
               value={text}
               onChange={(event) => {
                 setText(event.target.value);

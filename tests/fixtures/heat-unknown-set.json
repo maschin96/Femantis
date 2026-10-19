@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "units": "SI",
+  "physics": "heat",
+  "materials": {
+    "T": {
+      "Werkstoff": {
+        "conductivity": 2.0,
+        "unit": "W/(m K)"
+      }
+    }
+  },
+  "regions": {
+    "T": {
+      "Basis": "Werkstoff",
+      "Spitze": "Werkstoff"
+    }
+  },
+  "boundary": {
+    "dirichlet": [
+      {
+        "field": "T",
+        "set": "Einspannung",
+        "value": 300.0,
+        "unit": "K"
+      },
+      {
+        "field": "T",
+        "set": "Fehlt",
+        "value": 350.0,
+        "unit": "K"
+      }
+    ]
+  }
+}

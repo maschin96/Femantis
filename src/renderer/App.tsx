@@ -38,12 +38,13 @@ import { ModelEditor } from './ModelEditor';
 import { BoxCreator } from './BoxCreator';
 import { ModelRestartDialog } from './ModelRestartDialog';
 import { ResultsPanel } from './ResultsPanel';
+import { decodeDiagnostic, describeDiagnostic, type Diagnostic } from '../shared/diagnostics';
 import { scalarValues, fieldLimits } from './viewer/fields';
 
 const number = (value: number) => value.toLocaleString('de-AT');
 const length = (value: number) =>
   `${(value * 1000).toLocaleString('de-AT', { maximumFractionDigits: 3 })} mm`;
-type Notice = { time: string; kind: 'info' | 'error'; message: string };
+type Notice = { time: string; kind: 'info' | 'error'; message: string; diagnostic?: Diagnostic };
 
 function Logo() {
   return (
@@ -86,6 +87,7 @@ export function App() {
   const [model, setModel] = useState<ModelDocument | null>(null);
   const [result, setResult] = useState<ResultPacket | null>(null);
   const [stage, setStage] = useState<'mesh' | 'model' | 'calculation' | 'results'>('mesh');
+  const [focusRequest, setFocusRequest] = useState<{ paths: string[]; nonce: number } | null>(null);
   const [boxDialog, setBoxDialog] = useState(false);
   const [restartDialog, setRestartDialog] = useState(false);
   const [phase, setPhase] = useState('');
@@ -154,7 +156,7 @@ export function App() {
     [],
   );
 
-  function notice(message: string, kind: Notice['kind'] = 'info') {
+  function notice(message: string, kind: Notice['kind'] = 'info', diagnostic?: Diagnostic) {
     setNotices((previous) =>
       [
         {
@@ -165,6 +167,7 @@ export function App() {
           }),
           kind,
           message,
+          diagnostic,
         },
         ...previous,
       ].slice(0, 30),
@@ -200,13 +203,9 @@ export function App() {
     try {
       await action();
     } catch (error) {
-      notice(
-        (error instanceof Error ? error.message : String(error)).replace(
-          /^Error invoking remote method '[^']+': Error: /,
-          '',
-        ),
-        'error',
-      );
+      const diagnostic = decodeDiagnostic(error instanceof Error ? error.message : String(error));
+      const { title, hint } = describeDiagnostic(diagnostic);
+      notice(hint ? `${title} ${hint}` : title, 'error', diagnostic.path ? diagnostic : undefined);
     } finally {
       setBusy(null);
     }
@@ -559,6 +558,8 @@ export function App() {
               document={model}
               busy={!!busy}
               onChange={editModel}
+              focusRequest={focusRequest}
+              onFocusHandled={() => setFocusRequest(null)}
               onPendingChange={(value) => {
                 setPendingJSON(value);
                 if (value) setDirty(true);
@@ -836,7 +837,19 @@ export function App() {
               <div key={`${item.time}-${index}`} className={`message ${item.kind}`}>
                 <span>{item.time}</span>
                 {item.kind === 'info' ? <Check size={13} /> : <X size={13} />}
-                <p>{item.message}</p>
+                <div className="message-body">
+                  <p>{item.message}</p>
+                  {item.diagnostic && (
+                    <DiagnosticDetails
+                      diagnostic={item.diagnostic}
+                      canShow={!!model && !!mesh}
+                      onShow={(paths) => {
+                        setStage('model');
+                        setFocusRequest({ paths, nonce: Date.now() });
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             ))
           ) : (
@@ -895,6 +908,39 @@ export function App() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function DiagnosticDetails({
+  diagnostic,
+  canShow,
+  onShow,
+}: {
+  diagnostic: Diagnostic;
+  canShow: boolean;
+  onShow: (paths: string[]) => void;
+}) {
+  const paths = [diagnostic.path!, ...diagnostic.related];
+  return (
+    <div className="diagnostic">
+      <span>
+        Datenpfad <code>{diagnostic.path}</code>
+        {diagnostic.related.length > 0 && (
+          <>
+            {' '}
+            · bezogen auf{' '}
+            {diagnostic.related.map((item) => (
+              <code key={item}>{item}</code>
+            ))}
+          </>
+        )}
+      </span>
+      {canShow && <button onClick={() => onShow(paths)}>Eingabe anzeigen</button>}
+      <details>
+        <summary>Toolbox-Meldung ({diagnostic.code})</summary>
+        <code>{diagnostic.detail}</code>
+      </details>
     </div>
   );
 }
