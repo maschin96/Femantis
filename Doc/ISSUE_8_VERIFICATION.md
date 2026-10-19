@@ -1,8 +1,8 @@
 # Issue #8: Viewerleistung für 100.000 Tet4-Zellen
 
-Bezug: [Issue #8](https://github.com/maschin96/Firmantis/issues/8), Branch
+Bezug: [Issue #8](https://github.com/maschin96/Femantis/issues/8), Branch
 `codex/8-viewer-performance`, Basis `966d172` (`codex/24-liquid-glass-ui`, siehe
-[PR #26](https://github.com/maschin96/Firmantis/pull/26)), 19.10.2026.
+[PR #26](https://github.com/maschin96/Femantis/pull/26)), 19.10.2026.
 
 ## Referenzgerät und Messablauf
 
