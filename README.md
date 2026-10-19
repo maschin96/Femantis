@@ -4,7 +4,7 @@ Electron-Desktopoberfläche für die Python-FEM-Toolbox. Version 0.2 bietet Mode
 
 ## Starten
 
-Voraussetzungen: Node.js mit npm, Python 3.11–3.13 und eine mit `gh auth login` angemeldete GitHub-Sitzung mit Zugriff auf `maschin96/FEM-Toolbox`. Die Toolbox bleibt eine separate Abhängigkeit; der geprüfte Commit ist festgelegt.
+Voraussetzungen: Node.js mit npm, Python 3.11–3.13 und Internetzugang. `npm run setup:backend` lädt den festgelegten Commit der öffentlichen [FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox) (MIT) ohne GitHub-Anmeldung über pip. Die Toolbox bleibt eine separate Abhängigkeit.
 
 ```sh
 npm ci
@@ -71,7 +71,7 @@ npm run benchmark
 
 `test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS.
 
-Die GitHub-Prüfjobs und das für die private Toolbox nötige Lesesecret sind unter [CI](Doc/CI.md) beschrieben.
+Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 
 ## Dokumentation
 
