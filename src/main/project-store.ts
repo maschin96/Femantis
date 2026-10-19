@@ -30,6 +30,8 @@ export interface RunFiles {
   modelKey: string;
   sourceKey: string;
   provenanceSha256?: string;
+  /** ISO time of the successful solve, when known. */
+  createdAt?: string;
 }
 
 const digestSchema = z.string().regex(/^[a-f0-9]{64}$/);
@@ -141,6 +143,21 @@ export async function verifyRunFiles(run: RunFiles, source: MeshSource): Promise
   return !!proof;
 }
 
+/** Verified provenance state and input revision of one run, without loading its fields. */
+export async function describeRun(
+  run: RunFiles,
+  source: MeshSource,
+): Promise<{ verified: boolean; inputHash: string | null; physics: string }> {
+  const verified = await verifyRunFiles(run, source);
+  const manifest = JSON.parse((await runBytes(run.directory, 'result.json')).toString('utf8'));
+  const inputHash = manifest.provenance?.input_sha256;
+  return {
+    verified,
+    inputHash: digestSchema.safeParse(inputHash).success ? inputHash : null,
+    physics: JSON.parse(run.modelKey).physics,
+  };
+}
+
 export async function readMeshSource(filename: string, scale: number): Promise<MeshSource> {
   if (!['.msh', '.vtu'].includes(path.extname(filename).toLowerCase()))
     throw new Error('Bitte ein Gmsh- oder VTU-Netz wählen.');
@@ -156,6 +173,7 @@ export async function openProjectFile(filename: string): Promise<{
   view: ViewState;
   model?: ModelDocument;
   run?: RunFiles;
+  runs: RunFiles[];
 }> {
   if ((await stat(filename)).size > 8 * 1024 * 1024)
     throw new Error('Die Projektdatei ist zu groß.');
@@ -174,32 +192,108 @@ export async function openProjectFile(filename: string): Promise<{
     throw new Error(
       'Die Netzdatei wurde verändert oder ist beschädigt. Bitte das Netz neu importieren.',
     );
-  let run: RunFiles | undefined;
-  if (project.run) {
-    const directory = await realpath(resolveMeshPath(root, project.run.path));
+  const runs: RunFiles[] = [];
+  for (const entry of project.runs ?? (project.run ? [project.run] : [])) {
+    const directory = await realpath(resolveMeshPath(root, entry.path));
     resolveMeshPath(root, path.relative(root, directory));
     for (const file of ['result.json', 'result.vtu'])
       resolveMeshPath(
         directory,
         path.relative(directory, await realpath(path.join(directory, file))),
       );
-    if (project.run.sourceKey !== sourceKey(source))
+    if (entry.sourceKey !== sourceKey(source))
       throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
-    run = { ...project.run, directory };
+    const run: RunFiles = {
+      id: entry.id,
+      directory,
+      modelKey: entry.modelKey,
+      sourceKey: entry.sourceKey,
+      ...(entry.provenanceSha256 ? { provenanceSha256: entry.provenanceSha256 } : {}),
+      ...(entry.createdAt ? { createdAt: entry.createdAt } : {}),
+    };
     await verifyRunFiles(run, source);
+    runs.push(run);
   }
-  return { name: project.name, source, view: project.view, model: project.model, run };
+  const run = project.run ? runs.find((entry) => entry.id === project.run!.id) : undefined;
+  return { name: project.name, source, view: project.view, model: project.model, run, runs };
 }
 
+const runArtifacts = [
+  'result.json',
+  'result.vtu',
+  'case.json',
+  'case.toml',
+  'mesh.msh',
+  'mesh.vtu',
+  'model.json',
+  'run.json',
+];
+
+/** Copy one run into the project without replacing a differing existing bundle. */
+async function copyRun(
+  root: string,
+  folderName: string,
+  run: RunFiles,
+  source: MeshSource,
+): Promise<NonNullable<ReturnType<typeof parseProject>['run']>> {
+  if (run.sourceKey !== sourceKey(source))
+    throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
+  const relative = `${folderName}/runs/${run.id}`;
+  const destination = path.join(root, relative);
+  await mkdir(destination, { recursive: true });
+  resolveMeshPath(root, path.relative(root, await realpath(destination)));
+  const runRoot = await realpath(run.directory);
+  for (const file of await readdir(runRoot)) {
+    if (!runArtifacts.includes(file)) continue;
+    const original = path.join(runRoot, file);
+    const actual = await realpath(original);
+    resolveMeshPath(runRoot, path.relative(runRoot, actual));
+    const target = path.join(destination, file);
+    if (path.resolve(original) !== path.resolve(target)) {
+      try {
+        await copyFile(original, target, constants.COPYFILE_EXCL);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        resolveMeshPath(destination, path.relative(destination, await realpath(target)));
+        if (sha256(await readFile(target)) !== sha256(await readFile(original)))
+          throw new Error(
+            'Eine gespeicherte Ergebnisdatei wurde verändert. Bitte ein anderes Speicherziel wählen.',
+          );
+      }
+    }
+  }
+  await verifyRunFiles({ ...run, directory: destination }, source);
+  return {
+    id: run.id,
+    path: relative,
+    modelKey: run.modelKey,
+    sourceKey: run.sourceKey,
+    ...(run.provenanceSha256 ? { provenanceSha256: run.provenanceSha256 } : {}),
+    ...(run.createdAt ? { createdAt: run.createdAt } : {}),
+  };
+}
+
+/**
+ * Save the project with `run` as selected run and `retained` as the run history
+ * (defaults to the selected run alone). Every run is copied into `<name>.files/runs`;
+ * runs dropped from the history keep their files there. Returns the history with
+ * directories pointing at the project copies.
+ */
 export async function saveProjectFile(
   filename: string,
   source: MeshSource,
   view: ViewState,
   model?: ModelDocument | null,
   run?: RunFiles,
-): Promise<void> {
+  retained?: readonly RunFiles[],
+): Promise<RunFiles[]> {
   const root = await realpath(path.dirname(filename));
-  if (run) await verifyRunFiles(run, source);
+  const history = [...(retained ?? (run ? [run] : []))];
+  if (run && !history.some((entry) => entry.id === run.id)) history.unshift(run);
+  if (history.length && !run) throw new Error('Bitte einen Berechnungslauf auswählen.');
+  if (new Set(history.map((entry) => entry.id)).size !== history.length)
+    throw new Error('Die Laufhistorie enthält einen Lauf mehrfach.');
+  for (const entry of history) await verifyRunFiles(entry, source);
   const digest = sha256(source.bytes);
   const folderName = `${path.basename(filename, '.json')}.files`;
   const folder = path.join(root, folderName);
@@ -216,57 +310,11 @@ export async function saveProjectFile(
         'Eine vorhandene Projektnetzdatei ist beschädigt. Bitte ein anderes Speicherziel wählen.',
       );
   }
-  let savedRun;
-  if (run) {
-    if (run.sourceKey !== sourceKey(source))
-      throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
-    const relative = `${folderName}/runs/${run.id}`;
-    const destination = path.join(root, relative);
-    await mkdir(destination, { recursive: true });
-    resolveMeshPath(root, path.relative(root, await realpath(destination)));
-    const runRoot = await realpath(run.directory);
-    for (const file of await readdir(runRoot)) {
-      if (
-        ![
-          'result.json',
-          'result.vtu',
-          'case.json',
-          'case.toml',
-          'mesh.msh',
-          'mesh.vtu',
-          'model.json',
-          'run.json',
-        ].includes(file)
-      )
-        continue;
-      const original = path.join(runRoot, file);
-      const actual = await realpath(original);
-      resolveMeshPath(runRoot, path.relative(runRoot, actual));
-      const target = path.join(destination, file);
-      if (path.resolve(original) !== path.resolve(target)) {
-        try {
-          await copyFile(original, target, constants.COPYFILE_EXCL);
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-          resolveMeshPath(destination, path.relative(destination, await realpath(target)));
-          if (sha256(await readFile(target)) !== sha256(await readFile(original)))
-            throw new Error(
-              'Eine gespeicherte Ergebnisdatei wurde verändert. Bitte ein anderes Speicherziel wählen.',
-            );
-        }
-      }
-    }
-    await verifyRunFiles({ ...run, directory: destination }, source);
-    savedRun = {
-      id: run.id,
-      path: relative,
-      modelKey: run.modelKey,
-      sourceKey: run.sourceKey,
-      ...(run.provenanceSha256 ? { provenanceSha256: run.provenanceSha256 } : {}),
-    };
-  }
+  const savedRuns: Awaited<ReturnType<typeof copyRun>>[] = [];
+  for (const entry of history) savedRuns.push(await copyRun(root, folderName, entry, source));
+  const savedRun = run ? savedRuns.find((entry) => entry.id === run.id) : undefined;
   const document = parseProject({
-    schemaVersion: model || run ? 2 : 1,
+    schemaVersion: model || savedRun ? 2 : 1,
     name: path.basename(filename, '.femantis.json'),
     mesh: {
       path: `${folderName}/${meshName}`,
@@ -276,7 +324,7 @@ export async function saveProjectFile(
     },
     view: viewSchema.parse(view),
     ...(model ? { model } : {}),
-    ...(savedRun ? { run: savedRun } : {}),
+    ...(savedRun ? { run: savedRun, runs: savedRuns } : {}),
   });
   const temporary = path.join(root, `.femantis-${randomUUID()}.tmp`);
   try {
@@ -285,4 +333,8 @@ export async function saveProjectFile(
   } finally {
     await rm(temporary, { force: true });
   }
+  return history.map((entry, index) => ({
+    ...entry,
+    directory: path.join(root, savedRuns[index].path),
+  }));
 }

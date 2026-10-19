@@ -86,6 +86,28 @@ export interface ResultPacket {
   metrics: Record<string, Record<string, unknown>>;
   limitations: string[];
 }
+/** One retained calculation run as listed in the run history (#7). */
+export interface RunSummary {
+  id: string;
+  /** ISO solve time; null for runs saved before #7. */
+  createdAt: string | null;
+  physics: Physics;
+  /** Toolbox input hash of the solved snapshot (input revision). */
+  inputHash: string | null;
+  modelKey: string;
+  provenanceVerified: boolean;
+  /** Where the run's files currently live: the saved project or the local cache. */
+  stored: 'project' | 'cache';
+}
+export interface CacheUsage {
+  bytes: number;
+  runs: number;
+}
+export interface RunHistory {
+  runs: RunSummary[];
+  selectedRunId: string | null;
+  cache: CacheUsage;
+}
 export interface JobEvent {
   phase: 'validating' | 'solving' | 'exporting';
 }
@@ -113,6 +135,10 @@ export interface DesktopAPI {
     model: ModelDocument | null,
     runId: string | null,
   ): Promise<{ path: string; name: string } | null>;
+  listRuns(): Promise<RunHistory>;
+  selectRun(id: string): Promise<ResultPacket>;
+  removeRun(id: string): Promise<RunHistory>;
+  cleanRunCache(): Promise<{ removed: CacheUsage; history: RunHistory }>;
 }
 
 export const defaultView = (): ViewState => ({
