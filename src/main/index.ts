@@ -290,7 +290,11 @@ function createWindow(): void {
     minWidth: 1100,
     minHeight: 720,
     title: 'Femantis Desktop',
-    backgroundColor: '#0B1F2A',
+    backgroundColor: '#E8EFF2',
+    // The glass header doubles as the macOS title bar (drag region in styles.css).
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 24, y: 32 } }
+      : {}),
     show: false,
     webPreferences: {
       preload: path.resolve(here, '../preload/index.cjs'),
