@@ -1,0 +1,163 @@
+{
+  "environment": {
+    "label": "baseline",
+    "date": "2026-10-19T17:34:48.301Z",
+    "platform": "Darwin 27.0.0 arm64",
+    "cpu": "Apple M4",
+    "memoryGB": 32,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "electron": "44.7.0",
+    "chrome": "152.0.7977.130",
+    "viewport": [
+      1480,
+      940
+    ],
+    "devicePixelRatio": 2
+  },
+  "block-100k": {
+    "cells": 100800,
+    "points": 18942,
+    "exteriorFaces": 8240,
+    "geometry": {
+      "surfaceTriangles": 8240,
+      "edgeSegments": 12360,
+      "nodes": 4122,
+      "gpuBytes": 1334904
+    },
+    "load": {
+      "totalSeconds": 12.37,
+      "createViewportMs": 41.9
+    },
+    "memoryAfterLoad": {
+      "rendererHeapMB": 13.6,
+      "rendererWorkingSetMB": 220.2,
+      "gpuProcessWorkingSetMB": 118,
+      "mainWorkingSetMB": 205.5
+    },
+    "rotationMesh": {
+      "samples": 272,
+      "medianMs": 8.3,
+      "p95Ms": 9.1,
+      "maxMs": 9.3,
+      "fps": 120.5
+    },
+    "switchModeMs": 14.4,
+    "rotationPart": {
+      "samples": 271,
+      "medianMs": 8.3,
+      "p95Ms": 8.5,
+      "maxMs": 100.1,
+      "fps": 120.5
+    },
+    "pick": {
+      "endToEndMs": 12,
+      "raycastMs": 1.2,
+      "highlightMs": 3.2
+    },
+    "groups": {
+      "selectVolumeGroupMs": 13.3,
+      "hideFacetGroupMs": 12.5
+    },
+    "solve": {
+      "totalSeconds": 24.01,
+      "rotationDuringSolve": {
+        "samples": 181,
+        "medianMs": 8.3,
+        "p95Ms": 8.7,
+        "maxMs": 9.2,
+        "fps": 120.5
+      }
+    },
+    "field": {
+      "showResultMs": 15.1,
+      "switchFieldMs": 15.1,
+      "changeLimitsMs": 12.2
+    },
+    "rotationResult": {
+      "samples": 270,
+      "medianMs": 8.3,
+      "p95Ms": 8.4,
+      "maxMs": 9.3,
+      "fps": 120.5
+    },
+    "memoryWithResult": {
+      "rendererHeapMB": 13.6,
+      "rendererWorkingSetMB": 244.3,
+      "gpuProcessWorkingSetMB": 125.6,
+      "mainWorkingSetMB": 251
+    }
+  },
+  "plate-100k": {
+    "cells": 101400,
+    "points": 34322,
+    "exteriorFaces": 68640,
+    "geometry": {
+      "surfaceTriangles": 68640,
+      "edgeSegments": 102960,
+      "nodes": 34322,
+      "gpuBytes": 11119704
+    },
+    "load": {
+      "totalSeconds": 14.63,
+      "createViewportMs": 285.4
+    },
+    "memoryAfterLoad": {
+      "rendererHeapMB": 13.6,
+      "rendererWorkingSetMB": 339.2,
+      "gpuProcessWorkingSetMB": 160.5,
+      "mainWorkingSetMB": 219.6
+    },
+    "rotationMesh": {
+      "samples": 270,
+      "medianMs": 8.3,
+      "p95Ms": 8.4,
+      "maxMs": 9.4,
+      "fps": 120.5
+    },
+    "switchModeMs": 57.5,
+    "rotationPart": {
+      "samples": 270,
+      "medianMs": 8.3,
+      "p95Ms": 8.8,
+      "maxMs": 75,
+      "fps": 120.5
+    },
+    "pick": {
+      "endToEndMs": 13,
+      "raycastMs": 2.6,
+      "highlightMs": 3.6
+    },
+    "groups": {
+      "selectVolumeGroupMs": 68.8,
+      "hideFacetGroupMs": 42.7
+    },
+    "solve": {
+      "totalSeconds": 25.42,
+      "rotationDuringSolve": {
+        "samples": 181,
+        "medianMs": 8.3,
+        "p95Ms": 8.4,
+        "maxMs": 9.2,
+        "fps": 120.5
+      }
+    },
+    "field": {
+      "showResultMs": 68.8,
+      "switchFieldMs": 55,
+      "changeLimitsMs": 53.9
+    },
+    "rotationResult": {
+      "samples": 270,
+      "medianMs": 8.3,
+      "p95Ms": 8.5,
+      "maxMs": 9.3,
+      "fps": 120.5
+    },
+    "memoryWithResult": {
+      "rendererHeapMB": 13.6,
+      "rendererWorkingSetMB": 355.7,
+      "gpuProcessWorkingSetMB": 167,
+      "mainWorkingSetMB": 251.1
+    }
+  }
+}

@@ -14,7 +14,9 @@
     "test:backend": ".venv/bin/python -m unittest discover -s tests/backend -v",
     "test:desktop": "playwright test",
     "setup:backend": "python3 scripts/setup_backend.py",
-    "benchmark": ".venv/bin/python scripts/benchmark_backend.py"
+    "benchmark": ".venv/bin/python scripts/benchmark_backend.py",
+    "benchmark:meshes": ".venv/bin/python scripts/generate_viewer_meshes.py",
+    "benchmark:viewer": "npm run build && playwright test -c playwright.benchmark.config.ts"
   },
   "dependencies": {
     "lucide-react": "1.56.0",

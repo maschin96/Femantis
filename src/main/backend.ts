@@ -322,6 +322,15 @@ export async function backendStatus(root: string): Promise<BackendStatus> {
   }
 }
 
+/**
+ * Import limit by mesh file size. The Toolbox boundary topology runs per cell in Python
+ * (#8: about 10–13 s per MiB of Tet4 VTU on macOS/Apple Silicon); 30 s/MiB leaves at
+ * least twice that, capped at one hour for the 256 MB file limit.
+ */
+export function importTimeout(bytes: number): number {
+  return Math.min(120_000 + Math.ceil((bytes / (1024 * 1024)) * 30_000), 60 * 60_000);
+}
+
 export async function importMesh(
   root: string,
   source: Buffer,
@@ -333,7 +342,12 @@ export async function importMesh(
     const sourcePath = path.join(directory, `input${path.extname(name).toLowerCase()}`);
     await writeFile(sourcePath, source);
     const manifest = manifestSchema.parse(
-      await requestBackend(root, 'importMesh', { path: sourcePath, scale, outputDir: directory }),
+      await requestBackend(
+        root,
+        'importMesh',
+        { path: sourcePath, scale, outputDir: directory },
+        { timeout: importTimeout(source.length) },
+      ),
     );
     const arrays: Record<string, Float64Array | Uint32Array | Int32Array> = {};
     for (const [name, spec] of Object.entries(manifest.buffers)) {

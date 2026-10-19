@@ -1,0 +1,62 @@
+{
+  "environment": {
+    "label": "baseline-plate-1m",
+    "date": "2026-10-19T18:12:17.570Z",
+    "platform": "Darwin 27.0.0 arm64",
+    "cpu": "Apple M4",
+    "memoryGB": 32,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "electron": "44.7.0",
+    "chrome": "152.0.7977.130",
+    "viewport": [
+      1480,
+      940
+    ],
+    "devicePixelRatio": 2
+  },
+  "plate-1m": {
+    "cells": 1008600,
+    "points": 337842,
+    "exteriorFaces": 675680,
+    "geometry": {
+      "surfaceTriangles": 675680,
+      "edgeSegments": 1013520,
+      "nodes": 337842,
+      "gpuBytes": 109460184
+    },
+    "load": {
+      "totalSeconds": 176.66,
+      "createViewportMs": 877.1
+    },
+    "memoryAfterLoad": {
+      "rendererHeapMB": 296.8,
+      "rendererWorkingSetMB": 538.6,
+      "gpuProcessWorkingSetMB": 255.9,
+      "mainWorkingSetMB": 750.2
+    },
+    "rotationMesh": {
+      "samples": 271,
+      "medianMs": 8.3,
+      "p95Ms": 9.2,
+      "maxMs": 9.3,
+      "fps": 120.5
+    },
+    "switchModeMs": 794.3,
+    "rotationPart": {
+      "samples": 271,
+      "medianMs": 8.3,
+      "p95Ms": 9.3,
+      "maxMs": 9.4,
+      "fps": 120.5
+    },
+    "pick": {
+      "endToEndMs": 39,
+      "raycastMs": 26.4,
+      "highlightMs": 4.4
+    },
+    "groups": {
+      "selectVolumeGroupMs": 777.6,
+      "hideFacetGroupMs": 464.7
+    }
+  }
+}
