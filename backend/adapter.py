@@ -3,8 +3,13 @@ from contextlib import redirect_stdout
 import json
 from pathlib import Path
 import platform
+import re
 import sys
 import tomllib
+
+
+class MeshFileError(ValueError):
+    """A mesh file has an unsupported format or import setting."""
 
 
 def mesh_payload(mesh):
@@ -83,9 +88,66 @@ def read_mesh(path, scale=1):
         return read_gmsh(path, length_scale_to_m=scale)
     if path.suffix.lower() == ".vtu":
         if scale != 1:
-            raise ValueError("VTU-Netze verwenden Meter. Bitte den Importmaßstab auf m setzen.")
+            raise MeshFileError("VTU-Netze verwenden Meter. Bitte den Importmaßstab auf m setzen.")
         return read_vtu(path)
-    raise ValueError("Unterstützte Netzformate: .msh und .vtu.")
+    raise MeshFileError("Unterstützte Netzformate: .msh und .vtu.")
+
+
+DIAGNOSTIC_VERSION = 1
+# Toolbox 1.4.0 reports these cases only through ModelSchemaError paths and
+# reasons; tests/backend/test_diagnostics.py pins the wording with real errors.
+_ANCHOR_PATH = re.compile(r"^boundary\.(T|u|phi)$")
+_CONFLICT = re.compile(r" conflicts with .* from (boundary\.[a-z_]+\[\d+\])$")
+
+
+def diagnostic(error):
+    """Classify an exception into the versioned desktop diagnostic contract.
+
+    Returns a JSON-safe dict with category, kind, Toolbox data path, related
+    paths, the Toolbox reason and a truncated raw detail. Only IDs that the
+    Toolbox documents as external (volume-cell IDs) are passed, as strings.
+    """
+    try:
+        from fem_toolbox import errors
+    except ImportError:
+        errors = None
+    def clip(text):
+        # Anchor reasons list every affected node; keep the protocol line small.
+        return text if len(text) <= 500 else text[:499] + "…"
+    result = {"diagnostic_version": DIAGNOSTIC_VERSION, "category": "internal", "kind": None,
+              "code": type(error).__name__, "path": None, "related": [], "reason": None,
+              "detail": clip(str(error)), "cell_id": None}
+    if errors is not None and isinstance(error, errors.ModelSchemaError):
+        path, reason, cause = error.path, error.reason, error.__cause__
+        result.update(path=path, reason=clip(reason), category="schema")
+        conflict = _CONFLICT.search(reason)
+        if isinstance(cause, errors.MaterialAssignmentError):
+            result.update(category="material", kind=cause.kind,
+                          related=[f"{path}.{region}" for region in cause.regions],
+                          cell_id=None if cause.cell_id is None else str(cause.cell_id))
+        elif path == "file":
+            result["category"] = "file"
+        elif path.split(".")[0] in ("materials", "regions"):
+            result.update(category="material", kind="value")
+        elif _ANCHOR_PATH.match(path):
+            result.update(category="reference", kind="missing_anchor")
+        elif reason.startswith("unknown facet set"):
+            result.update(category="reference", kind="unknown_set")
+        elif conflict:
+            result.update(category="boundary_conflict", related=[conflict.group(1)])
+    elif errors is not None and isinstance(error, (errors.ThermalNullspaceError, errors.ElectricGaugeError)):
+        result.update(category="reference", kind="missing_anchor", path="boundary")
+    elif errors is not None and isinstance(error, errors.MaterialAssignmentError):
+        result.update(category="material", kind=error.kind,
+                      cell_id=None if error.cell_id is None else str(error.cell_id))
+    elif isinstance(error, (OSError, tomllib.TOMLDecodeError, MeshFileError)) or (
+            errors is not None and isinstance(error, errors.MeshIOError)):
+        result["category"] = "file"
+    elif errors is not None and isinstance(error, (errors.MeshValidationError, errors.ElementGeometryError)):
+        result.update(category="mesh", path=error.field)
+    elif isinstance(error, ValueError):
+        result["category"] = "input"
+    return result
 
 
 def handle_request(request):
@@ -139,7 +201,7 @@ def main():
             result = handle_request(request)
         response = {"id": request.get("id"), "result": result}
     except Exception as error:
-        response = {"id": request.get("id") if isinstance(request, dict) else None, "error": {"category": type(error).__name__, "message": str(error), "field": str(getattr(error, "field", ""))}}
+        response = {"id": request.get("id") if isinstance(request, dict) else None, "error": {"category": type(error).__name__, "message": str(error), "field": str(getattr(error, "field", "")), "diagnostic": diagnostic(error)}}
     print(json.dumps(response, allow_nan=False))
 
 
