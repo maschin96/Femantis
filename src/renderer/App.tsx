@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   CircleDot,
   Eye,
   EyeOff,
@@ -14,9 +15,12 @@ import {
   Layers,
   LoaderCircle,
   MousePointer2,
+  Move3D,
   RefreshCw,
+  RotateCcw,
+  Ruler,
   Save,
-  Settings2,
+  Sparkles,
   Triangle,
   X,
   Plus,
@@ -40,11 +44,18 @@ import { ModelRestartDialog } from './ModelRestartDialog';
 import { ResultsPanel } from './ResultsPanel';
 import { decodeDiagnostic, describeDiagnostic, type Diagnostic } from '../shared/diagnostics';
 import { scalarValues, fieldLimits } from './viewer/fields';
+import { actionLabels, nextStep, stepStates, type GuidanceAction, type Stage } from './guidance';
 
 const number = (value: number) => value.toLocaleString('de-AT');
 const length = (value: number) =>
   `${(value * 1000).toLocaleString('de-AT', { maximumFractionDigits: 3 })} mm`;
 type Notice = { time: string; kind: 'info' | 'error'; message: string; diagnostic?: Diagnostic };
+const stages: [Stage, string][] = [
+  ['mesh', 'Netz & Bauteil'],
+  ['model', 'Modell'],
+  ['calculation', 'Berechnung'],
+  ['results', 'Ergebnisse'],
+];
 
 function Logo() {
   return (
@@ -65,7 +76,6 @@ function Logo() {
       </svg>
       <div>
         FEM<span>antis</span>
-        <small>DESKTOP WORKSPACE</small>
       </div>
     </div>
   );
@@ -86,7 +96,9 @@ export function App() {
 
   const [model, setModel] = useState<ModelDocument | null>(null);
   const [result, setResult] = useState<ResultPacket | null>(null);
-  const [stage, setStage] = useState<'mesh' | 'model' | 'calculation' | 'results'>('mesh');
+  const [stage, setStage] = useState<Stage>('mesh');
+  const [consoleOpen, setConsoleOpen] = useState(true);
+  const [collapsed, setCollapsed] = useState<('volume' | 'facet')[]>([]);
   const [focusRequest, setFocusRequest] = useState<{ paths: string[]; nonce: number } | null>(null);
   const [boxDialog, setBoxDialog] = useState(false);
   const [restartDialog, setRestartDialog] = useState(false);
@@ -157,6 +169,8 @@ export function App() {
   );
 
   function notice(message: string, kind: Notice['kind'] = 'info', diagnostic?: Diagnostic) {
+    // Errors must stay visible even when the console was collapsed.
+    if (kind === 'error') setConsoleOpen(true);
     setNotices((previous) =>
       [
         {
@@ -294,73 +308,95 @@ export function App() {
   );
   const visibleNotices = notices.filter((item) => logTab === 'all' || item.kind === 'error');
 
+  const workflow = {
+    hasMesh: !!mesh,
+    hasModel: !!model,
+    hasResult: !!result,
+    stale,
+    stage,
+  };
+  const guidance = nextStep(workflow);
+  const completed = stepStates(workflow);
+  const locked = !!busy || pendingJSON;
+  const errorCount = notices.filter((item) => item.kind === 'error').length;
+  const groupCount = (kind: 'volume' | 'facet') =>
+    mesh?.groups.filter((group) => group.kind === kind).length || 0;
+  function runGuidance(action: GuidanceAction) {
+    if (action === 'createModel') createModel();
+    else setStage(action);
+  }
+
   return (
     <div className="app">
-      <header className="topbar">
+      <header className="topbar glass">
         <Logo />
-        <div className="topbar-divider" />
         <div className="project-title">
           <span>
             {projectName}
-            {dirty && <b title="Ungespeichert"> •</b>}
+            {dirty && (
+              <b
+                className="dirty-dot"
+                title="Ungespeicherte Änderungen"
+                aria-label="Ungespeichert"
+              />
+            )}
           </span>
           <small>{projectPath ? 'Gespeichertes Projekt' : 'Lokaler Arbeitsbereich'}</small>
         </div>
+        <nav className="workflow" aria-label="Arbeitsablauf">
+          {stages.map(([tab, label], index) => (
+            <button
+              key={tab}
+              className={`step ${stage === tab ? 'active' : ''} ${completed[tab] ? 'done' : ''}`}
+              aria-current={stage === tab ? 'step' : undefined}
+              disabled={
+                locked ||
+                (tab === 'model' && !model) ||
+                (tab === 'calculation' && !model) ||
+                (tab === 'results' && !result)
+              }
+              onClick={() => setStage(tab)}
+            >
+              <span className="step-index">0{index + 1}</span>
+              <span className="step-label">{label}</span>
+              {completed[tab] && <span className="sr-only"> · erledigt</span>}
+            </button>
+          ))}
+        </nav>
         <div className="header-actions">
           <button
-            disabled={!!busy || pendingJSON}
+            className="glass-button"
+            disabled={locked}
+            title="Projekt öffnen"
             onClick={() =>
               void run('Projekt öffnen', async () => accept(await window.desktop.openProject()))
             }
           >
-            <FolderOpen size={16} />
+            <FolderOpen size={15} />
             Projekt öffnen
           </button>
           <button
             className="primary"
-            disabled={!mesh || !!busy || pendingJSON}
+            disabled={!mesh || locked}
+            title="Speichern (⌘S)"
             onClick={() => void save()}
           >
-            <Save size={16} />
+            <Save size={15} />
             Speichern
           </button>
         </div>
       </header>
-      <div className="workflow">
-        {(['mesh', 'model', 'calculation', 'results'] as const).map((tab, index) => (
-          <button
-            key={tab}
-            className={`step ${stage === tab ? 'active' : ''}`}
-            disabled={
-              !!busy ||
-              pendingJSON ||
-              (tab === 'model' && !model) ||
-              (tab === 'calculation' && !model) ||
-              (tab === 'results' && !result)
-            }
-            onClick={() => setStage(tab)}
-          >
-            <span>0{index + 1}</span>
-            {['Netz & Bauteil', 'Modell', 'Berechnung', 'Ergebnisse'][index]}
-          </button>
-        ))}
-        <div className="workflow-note">
-          FEM-Arbeitsbereich <span>V0.2</span>
-        </div>
-      </div>
       <main className="workspace">
-        <aside className="sidebar">
+        <aside className="sidebar glass" aria-label="Projekt">
           <div className="panel-heading">
-            <span>PROJEKT</span>
-            <Layers size={15} />
+            <span>Projekt</span>
+            <Layers size={14} />
           </div>
           <div className="project-root">
-            <ChevronDown size={14} />
-            <FileBox size={18} />
+            <FileBox size={17} />
             <span>{projectName}</span>
           </div>
           <div className="sidebar-section">
-            <div className="section-label">GEOMETRIE & NETZ</div>
             <button
               className="tree-row mesh-row"
               onClick={() => {
@@ -369,166 +405,170 @@ export function App() {
               }}
               disabled={!mesh}
             >
-              <Box size={17} />
+              <Box size={16} />
               <span>{mesh?.name || 'Kein Netz geladen'}</span>
               {mesh && (
-                <span className="tree-tag">{mesh.cellType === 'tetra4' ? 'T4' : 'T10'}</span>
+                <span className="tree-tag">{mesh.cellType === 'tetra4' ? 'Tet4' : 'Tet10'}</span>
               )}
             </button>
             {(['volume', 'facet'] as const).map((kind) => (
               <div className="group-block" key={kind}>
-                <div className="group-heading">
-                  <ChevronDown size={12} />
+                <button
+                  className="group-heading"
+                  aria-expanded={!collapsed.includes(kind)}
+                  onClick={() =>
+                    setCollapsed((previous) =>
+                      previous.includes(kind)
+                        ? previous.filter((item) => item !== kind)
+                        : [...previous, kind],
+                    )
+                  }
+                >
+                  {collapsed.includes(kind) ? (
+                    <ChevronRight size={13} />
+                  ) : (
+                    <ChevronDown size={13} />
+                  )}
                   {kind === 'volume' ? 'Volumengruppen' : 'Flächengruppen'}
-                  <span>{mesh?.groups.filter((group) => group.kind === kind).length || 0}</span>
-                </div>
-                {mesh?.groups
-                  .filter((group) => group.kind === kind)
-                  .map((group) => (
-                    <div
-                      className={`group-row ${view.selectedGroup === group.key ? 'selected' : ''} ${view.hiddenGroups.includes(group.key) ? 'muted' : ''}`}
-                      key={group.key}
-                    >
-                      <button
-                        className="group-select"
-                        aria-label={`Gruppe ${group.name} auswählen`}
-                        onClick={() => {
-                          setSelectedTriangle(null);
-                          changeView({ selectedGroup: group.key });
-                        }}
+                  <span>{groupCount(kind)}</span>
+                </button>
+                {!collapsed.includes(kind) &&
+                  mesh?.groups
+                    .filter((group) => group.kind === kind)
+                    .map((group) => (
+                      <div
+                        className={`group-row ${view.selectedGroup === group.key ? 'selected' : ''} ${view.hiddenGroups.includes(group.key) ? 'muted' : ''}`}
+                        key={group.key}
                       >
-                        {kind === 'volume' ? <Box size={14} /> : <Triangle size={14} />}
-                        <span>{group.name}</span>
-                        <small>{number(group.members.length)}</small>
-                      </button>
-                      <button
-                        className="visibility"
-                        aria-label={`${group.name} ${view.hiddenGroups.includes(group.key) ? 'einblenden' : 'ausblenden'}`}
-                        title="Sichtbarkeit ändern"
-                        onClick={() =>
-                          changeView({
-                            hiddenGroups: view.hiddenGroups.includes(group.key)
-                              ? view.hiddenGroups.filter((key) => key !== group.key)
-                              : [...view.hiddenGroups, group.key],
-                          })
-                        }
-                      >
-                        {view.hiddenGroups.includes(group.key) ? (
-                          <EyeOff size={14} />
-                        ) : (
-                          <Eye size={14} />
-                        )}
-                      </button>
-                    </div>
-                  ))}
+                        <button
+                          className="group-select"
+                          aria-label={`Gruppe ${group.name} auswählen`}
+                          onClick={() => {
+                            setSelectedTriangle(null);
+                            changeView({ selectedGroup: group.key });
+                          }}
+                        >
+                          {kind === 'volume' ? <Box size={13} /> : <Triangle size={13} />}
+                          <span>{group.name}</span>
+                          <small>{number(group.members.length)}</small>
+                        </button>
+                        <button
+                          className="visibility"
+                          aria-label={`${group.name} ${view.hiddenGroups.includes(group.key) ? 'einblenden' : 'ausblenden'}`}
+                          title="Sichtbarkeit ändern"
+                          onClick={() =>
+                            changeView({
+                              hiddenGroups: view.hiddenGroups.includes(group.key)
+                                ? view.hiddenGroups.filter((key) => key !== group.key)
+                                : [...view.hiddenGroups, group.key],
+                            })
+                          }
+                        >
+                          {view.hiddenGroups.includes(group.key) ? (
+                            <EyeOff size={14} />
+                          ) : (
+                            <Eye size={14} />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                {!collapsed.includes(kind) && mesh && groupCount(kind) === 0 && (
+                  <div className="group-empty">Keine benannten Gruppen</div>
+                )}
               </div>
             ))}
           </div>
-          <div className="model-sidebar-actions">
-            <button disabled={!mesh || !!busy || pendingJSON} onClick={createModel}>
-              <Plus size={14} />
-              {model ? 'Modell neu erstellen' : 'Modell erstellen'}
-            </button>
+          <div className="source-card">
+            <div className="section-label">Netz laden</div>
+            <div className="import-row">
+              <label className="unit-label">
+                <span>Gmsh-Einheit</span>
+                <select
+                  aria-label="Gmsh-Längeneinheit"
+                  value={scale}
+                  disabled={locked}
+                  onChange={(event) => setScale(Number(event.target.value))}
+                >
+                  <option value={1}>m</option>
+                  <option value={0.001}>mm</option>
+                </select>
+              </label>
+              <button
+                className="primary"
+                disabled={locked || !backend.available}
+                title="Gmsh (.msh) oder VTU (.vtu) öffnen"
+                onClick={() =>
+                  void run('Netz importieren', async () =>
+                    accept(await window.desktop.openMesh(scale)),
+                  )
+                }
+              >
+                <ArrowDownToLine size={15} />
+                Netz öffnen
+              </button>
+            </div>
+            <small>Gmsh .msh oder VTU .vtu · VTU-Koordinaten in m.</small>
             <button
-              disabled={!!busy || pendingJSON || !backend.available}
+              className="source-action"
+              disabled={locked || !backend.available}
               onClick={() => setBoxDialog(true)}
             >
-              <Box size={14} />
+              <Box size={15} />
               Quader erstellen
+              <ChevronRight size={13} />
             </button>
-            {model && (
-              <button disabled={!!busy || pendingJSON} onClick={() => setStage('model')}>
-                {physicsLabels[model.physics]} · bearbeiten
-              </button>
-            )}
-            {result && (
-              <button disabled={!!busy || pendingJSON} onClick={() => setStage('results')}>
-                <CheckCircle2 size={14} />
-                {stale ? 'Vorheriges Ergebnis' : 'Ergebnisse ansehen'}
-              </button>
-            )}
-          </div>
-          <div className="import-card">
-            <ArrowDownToLine size={20} />
-            <h3>Ein eigenes Netz öffnen</h3>
-            <p>Gmsh oder VTU, mit Gruppen und Elementzuordnung.</p>
-            <label className="unit-label">
-              Gmsh-Längeneinheit
-              <select
-                aria-label="Gmsh-Längeneinheit"
-                value={scale}
-                disabled={!!busy || pendingJSON}
-                onChange={(event) => setScale(Number(event.target.value))}
-              >
-                <option value={1}>Meter (m)</option>
-                <option value={0.001}>Millimeter (mm)</option>
-              </select>
-            </label>
+            <div className="section-label examples-label">Beispiele</div>
             <button
-              className="primary"
-              disabled={!!busy || pendingJSON || !backend.available}
-              onClick={() =>
-                void run('Netz importieren', async () =>
-                  accept(await window.desktop.openMesh(scale)),
-                )
-              }
-            >
-              <FolderOpen size={15} />
-              Netz öffnen
-            </button>
-            <small>VTU-Koordinaten werden in m gelesen.</small>
-          </div>
-          <div className="examples">
-            <span className="section-label">BEISPIELNETZE</span>
-            <button
-              disabled={!!busy || pendingJSON || !backend.available}
+              className="source-action"
+              disabled={locked || !backend.available}
               onClick={() =>
                 void run('Tet4-Beispiel laden', async () =>
                   accept(await window.desktop.loadExample('tet4')),
                 )
               }
             >
-              <Box size={14} />
+              <Box size={15} />
               Kragträger · Tet4
               <ChevronRight size={13} />
             </button>
             <button
-              disabled={!!busy || pendingJSON || !backend.available}
+              className="source-action"
+              disabled={locked || !backend.available}
               onClick={() =>
                 void run('Tet10-Beispiel laden', async () =>
                   accept(await window.desktop.loadExample('tet10')),
                 )
               }
             >
-              <Grid2X2 size={14} />
+              <Grid2X2 size={15} />
               Tetraeder · Tet10
               <ChevronRight size={13} />
             </button>
           </div>
         </aside>
-        <section className="viewer-panel">
+        <section className="viewer-panel glass">
           <div className="viewer-toolbar">
-            <div className="view-tabs">
+            <div className="segmented" role="group" aria-label="Darstellung">
               <button
                 className={view.mode === 'part' ? 'active' : ''}
-                disabled={!!busy || pendingJSON}
+                disabled={locked}
                 onClick={() => {
                   changeView({ mode: 'part' });
                   if (stage === 'model' || stage === 'calculation') setStage('mesh');
                 }}
               >
-                <Box size={16} />
+                <Box size={15} />
                 Bauteil
               </button>
               <button
                 className={view.mode === 'mesh' ? 'active' : ''}
-                disabled={!!busy || pendingJSON}
+                disabled={locked}
                 onClick={() => {
                   changeView({ mode: 'mesh' });
                   if (stage === 'model' || stage === 'calculation') setStage('mesh');
                 }}
               >
-                <Grid2X2 size={16} />
+                <Grid2X2 size={15} />
                 Netz
               </button>
             </div>
@@ -539,7 +579,7 @@ export function App() {
                 disabled={!mesh}
                 onClick={() => changeView({ showNodes: !view.showNodes })}
               >
-                <CircleDot size={15} />
+                <CircleDot size={14} />
                 Knoten
               </button>
               <button
@@ -548,6 +588,7 @@ export function App() {
                 disabled={!mesh}
                 onClick={() => changeView({ showAxes: !view.showAxes })}
               >
+                <Move3D size={14} />
                 Achsen
               </button>
             </div>
@@ -585,43 +626,46 @@ export function App() {
             />
           ) : stage === 'calculation' && model ? (
             <div className="calculation-panel">
-              <span>FEM-TOOLBOX · STATIONÄR</span>
-              <h2>Modell berechnen</h2>
-              <p>
-                {physicsLabels[model.physics]} · {number(mesh?.cellCount || 0)} Elemente
-              </p>
-              <div className="calculation-phases">
-                {(['validating', 'solving', 'exporting'] as const).map((p, i) => (
-                  <div className={phase === p ? 'current' : ''} key={p}>
-                    <span>{i + 1}</span>
-                    {
-                      [
-                        'Modell und Randbedingungen prüfen',
-                        'System aufstellen und lösen',
-                        'Rohfelder und Bilanzen exportieren',
-                      ][i]
-                    }
-                    {phase === p && <LoaderCircle className="spin" size={16} />}
-                  </div>
-                ))}
+              <div className="calculation-card">
+                <span className="eyebrow">FEM-Toolbox · stationär</span>
+                <h2>Modell berechnen</h2>
+                <p>
+                  {physicsLabels[model.physics]} · {number(mesh?.cellCount || 0)} Elemente
+                </p>
+                <ol className="calculation-phases">
+                  {(['validating', 'solving', 'exporting'] as const).map((p, i) => (
+                    <li className={phase === p ? 'current' : ''} key={p}>
+                      <span>{i + 1}</span>
+                      {
+                        [
+                          'Modell und Randbedingungen prüfen',
+                          'System aufstellen und lösen',
+                          'Rohfelder und Bilanzen exportieren',
+                        ][i]
+                      }
+                      {phase === p && <LoaderCircle className="spin" size={16} />}
+                    </li>
+                  ))}
+                </ol>
+                {busy ? (
+                  <button
+                    className="cancel-calculation"
+                    onClick={() => void window.desktop.cancelJob()}
+                  >
+                    <X size={15} />
+                    Berechnung abbrechen
+                  </button>
+                ) : (
+                  <button className="primary large" onClick={() => void calculate()}>
+                    <Play size={15} />
+                    Berechnen
+                  </button>
+                )}
+                <p className="editor-hint">
+                  Die Oberfläche bleibt während der Berechnung bedienbar. Ein erfolgreicher
+                  Solverlauf ist kein experimenteller Validierungsnachweis.
+                </p>
               </div>
-              {busy ? (
-                <button
-                  className="cancel-calculation"
-                  onClick={() => void window.desktop.cancelJob()}
-                >
-                  Berechnung abbrechen
-                </button>
-              ) : (
-                <button className="primary" onClick={() => void calculate()}>
-                  <Play size={15} />
-                  Berechnen
-                </button>
-              )}
-              <p className="editor-hint">
-                Die Oberfläche bleibt während der Berechnung bedienbar. Ein erfolgreicher Solverlauf
-                ist kein experimenteller Validierungsnachweis.
-              </p>
             </div>
           ) : (
             <MeshViewer
@@ -642,12 +686,48 @@ export function App() {
           )}
           {busy && stage !== 'calculation' && (
             <div className="busy-overlay" role="status">
-              <LoaderCircle className="spin" size={23} />
-              <span>{busy}…</span>
+              <div>
+                <LoaderCircle className="spin" size={20} />
+                <span>{busy}…</span>
+              </div>
             </div>
           )}
         </section>
-        <aside className="inspector">
+        <aside className="inspector glass" aria-label="Eigenschaften">
+          <section className="next-step" aria-label="Nächster Schritt">
+            <span className="eyebrow">
+              <Sparkles size={12} />
+              Nächster Schritt
+            </span>
+            <h4>{guidance.title}</h4>
+            <p>{guidance.text}</p>
+            {(guidance.action || model) && (
+              <div className="next-step-actions">
+                {guidance.action && (
+                  <button
+                    className="primary"
+                    disabled={locked}
+                    onClick={() => runGuidance(guidance.action!)}
+                  >
+                    {guidance.action === 'createModel' ? (
+                      <Plus size={15} />
+                    ) : guidance.action === 'calculation' ? (
+                      <Play size={14} />
+                    ) : (
+                      <CheckCircle2 size={15} />
+                    )}
+                    {actionLabels[guidance.action]}
+                  </button>
+                )}
+                {model && (
+                  <button className="glass-button" disabled={!mesh || locked} onClick={createModel}>
+                    <RotateCcw size={14} />
+                    Modell neu erstellen
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
           {stage === 'results' && result && resultField && (
             <ResultsPanel
               result={result}
@@ -675,17 +755,13 @@ export function App() {
             />
           )}
 
-          <div className="panel-heading">
-            <span>EIGENSCHAFTEN</span>
-            <Settings2 size={15} />
-          </div>
           <div className="inspector-section">
             <div className="section-title">
-              <MousePointer2 size={15} />
+              <MousePointer2 size={14} />
               <h3>Auswahl</h3>
               {(selectedTriangle !== null || selectedGroup) && (
                 <button
-                  title="Auswahl aufheben"
+                  title="Auswahl aufheben (Esc)"
                   aria-label="Auswahl aufheben"
                   onClick={() => {
                     setSelectedTriangle(null);
@@ -746,13 +822,13 @@ export function App() {
               </>
             ) : (
               <div className="selection-empty">
-                Wählen Sie eine Gruppe im Projektbaum oder eine Fläche in der 3D-Ansicht.
+                Gruppe im Projektbaum oder Fläche in der 3D-Ansicht wählen.
               </div>
             )}
           </div>
           <div className="inspector-section">
             <div className="section-title">
-              <Grid2X2 size={15} />
+              <Grid2X2 size={14} />
               <h3>Netzinformation</h3>
             </div>
             <dl>
@@ -775,7 +851,7 @@ export function App() {
           </div>
           <div className="inspector-section">
             <div className="section-title">
-              <Box size={15} />
+              <Ruler size={14} />
               <h3>Abmessungen</h3>
             </div>
             <dl>
@@ -790,30 +866,43 @@ export function App() {
               Bauteilansicht aus der Außenfläche des FEM-Netzes. Originalkoordinaten in m.
             </div>
           </div>
-          <div className="next-step">
-            <span>MODELL UND BERECHNUNG</span>
-            <h4>Vom Netz zum Ergebnis</h4>
-            <p>
-              Über „Modell erstellen“ Materialien und Randbedingungen festlegen. Die Modellprüfung
-              kontrolliert die Eingaben vor der Berechnung.
-            </p>
-          </div>
         </aside>
       </main>
-      <section className="messages">
-        <div className="message-tabs">
-          <button className={logTab === 'all' ? 'active' : ''} onClick={() => setLogTab('all')}>
-            Meldungen <span>{notices.length}</span>
-          </button>
-          <button
-            className={logTab === 'errors' ? 'active' : ''}
-            onClick={() => setLogTab('errors')}
-          >
-            Fehler <span>{notices.filter((item) => item.kind === 'error').length}</span>
-          </button>
+      <section className={`dock glass ${consoleOpen ? 'open' : ''}`} aria-label="Meldungen">
+        <div className="dock-bar">
+          <span className="dock-status">
+            <i className={backend.available ? 'status-dot ready' : 'status-dot'} />
+            {busy || (backend.available ? 'Bereit' : 'Anbindung fehlt')}
+          </span>
+          <div className="segmented small" role="group" aria-label="Meldungsfilter">
+            <button className={logTab === 'all' ? 'active' : ''} onClick={() => setLogTab('all')}>
+              Meldungen <span>{notices.length}</span>
+            </button>
+            <button
+              className={`${logTab === 'errors' ? 'active' : ''} ${errorCount ? 'has-errors' : ''}`}
+              onClick={() => {
+                setLogTab('errors');
+                setConsoleOpen(true);
+              }}
+            >
+              Fehler <span>{errorCount}</span>
+            </button>
+          </div>
+          {!consoleOpen && notices[0] && (
+            <span className={`dock-latest ${notices[0].kind}`}>{notices[0].message}</span>
+          )}
+          <span className="dock-meta">
+            {mesh
+              ? `${number(mesh.cellCount)} Elemente · ${number(mesh.pointCount)} Knoten`
+              : 'Kein Netz'}
+            <span>·</span>
+            {backend.available ? `FEM-Toolbox ${backend.toolboxVersion}` : 'FEM-Toolbox offline'}
+            <span>·</span>
+            SI · Anzeige mm
+          </span>
           <button
             className="check-backend"
-            disabled={!!busy || pendingJSON}
+            disabled={locked}
             onClick={() =>
               void run('Anbindung prüfen', async () => {
                 const status = await window.desktop.backendStatus();
@@ -830,8 +919,18 @@ export function App() {
             <RefreshCw size={13} />
             Anbindung prüfen
           </button>
+          <button
+            className="dock-toggle"
+            aria-expanded={consoleOpen}
+            aria-controls="message-log"
+            aria-label={consoleOpen ? 'Meldungen einklappen' : 'Meldungen ausklappen'}
+            title={consoleOpen ? 'Meldungen einklappen' : 'Meldungen ausklappen'}
+            onClick={() => setConsoleOpen(!consoleOpen)}
+          >
+            {consoleOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+          </button>
         </div>
-        <div className="message-list" role="log">
+        <div className="message-list" id="message-log" role="log" hidden={!consoleOpen}>
           {visibleNotices.length ? (
             visibleNotices.map((item, index) => (
               <div key={`${item.time}-${index}`} className={`message ${item.kind}`}>
@@ -859,22 +958,6 @@ export function App() {
           )}
         </div>
       </section>
-      <footer className="statusbar">
-        <span>
-          <i className={backend.available ? 'status-dot ready' : 'status-dot'} />
-          {busy || (backend.available ? 'Bereit' : 'Anbindung fehlt')}
-        </span>
-        <span>
-          {mesh
-            ? `${number(mesh.cellCount)} Elemente · ${number(mesh.pointCount)} Knoten`
-            : 'Kein Netz'}
-        </span>
-        <div />
-        <span>
-          {backend.available ? `FEM-Toolbox ${backend.toolboxVersion}` : 'FEM-Toolbox offline'}
-        </span>
-        <span>SI · Anzeige mm</span>
-      </footer>
       {boxDialog && (
         <BoxCreator
           busy={!!busy}

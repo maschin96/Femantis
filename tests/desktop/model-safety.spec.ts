@@ -5,6 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
+import { backendStartup } from './startup';
 import { mkdtemp, readFile, writeFile, copyFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -18,7 +19,7 @@ test.beforeAll(async () => {
   app = await electron.launch({ args: ['.'], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
-  await expect(page.getByTestId('cell-count')).toHaveText('288');
+  await expect(page.getByTestId('cell-count')).toHaveText('288', backendStartup);
   await app.evaluate(({ dialog }) => {
     dialog.showMessageBoxSync = () => 1;
   });
