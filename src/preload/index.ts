@@ -16,6 +16,10 @@ const api: DesktopAPI = {
   cancelJob: () => ipcRenderer.invoke('desktop:cancel'),
   saveWorkspace: (view, model, runId) =>
     ipcRenderer.invoke('desktop:saveWorkspace', view, model, runId),
+  listRuns: () => ipcRenderer.invoke('desktop:runs'),
+  selectRun: (id) => ipcRenderer.invoke('desktop:selectRun', id),
+  removeRun: (id) => ipcRenderer.invoke('desktop:removeRun', id),
+  cleanRunCache: () => ipcRenderer.invoke('desktop:cleanRunCache'),
   onJob: (callback) => {
     const handler = (_event: unknown, value: import('../shared/types').JobEvent) => callback(value);
     ipcRenderer.on('desktop:job', handler);

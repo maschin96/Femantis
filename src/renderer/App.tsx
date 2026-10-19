@@ -34,6 +34,7 @@ import type {
   ViewState,
   ModelDocument,
   ResultPacket,
+  RunHistory as RunHistoryState,
 } from '../shared/types';
 import { defaultView } from '../shared/types';
 import { MeshViewer } from './viewer/MeshViewer';
@@ -42,6 +43,8 @@ import { ModelEditor } from './ModelEditor';
 import { BoxCreator } from './BoxCreator';
 import { ModelRestartDialog } from './ModelRestartDialog';
 import { ResultsPanel } from './ResultsPanel';
+import { RunHistory } from './RunHistory';
+import { formatBytes } from './runs';
 import { decodeDiagnostic, describeDiagnostic, type Diagnostic } from '../shared/diagnostics';
 import { scalarValues, fieldLimits } from './viewer/fields';
 import { actionLabels, nextStep, stepStates, type GuidanceAction, type Stage } from './guidance';
@@ -96,6 +99,7 @@ export function App() {
 
   const [model, setModel] = useState<ModelDocument | null>(null);
   const [result, setResult] = useState<ResultPacket | null>(null);
+  const [runHistory, setRunHistory] = useState<RunHistoryState | null>(null);
   const [stage, setStage] = useState<Stage>('mesh');
   const [consoleOpen, setConsoleOpen] = useState(true);
   const [collapsed, setCollapsed] = useState<('volume' | 'facet')[]>([]);
@@ -146,6 +150,7 @@ export function App() {
         const solved = await window.desktop.solveModel(snapshot);
         acceptResult(solved);
         setDirty(true);
+        setRunHistory(await window.desktop.listRuns());
         setStage('results');
         notice('Berechnung abgeschlossen. Rohfelder und Bilanzen sind verfügbar.');
       } finally {
@@ -187,8 +192,36 @@ export function App() {
       ].slice(0, 30),
     );
   }
+  async function selectRun(id: string) {
+    await run('Berechnungslauf laden', async () => {
+      acceptResult(await window.desktop.selectRun(id));
+      setDirty(true);
+      setRunHistory(await window.desktop.listRuns());
+    });
+  }
+  async function removeRun(id: string) {
+    await run('Berechnungslauf entfernen', async () => {
+      setRunHistory(await window.desktop.removeRun(id));
+      setDirty(true);
+      notice('Lauf aus der Historie entfernt.');
+    });
+  }
+  async function cleanRunCache() {
+    await run('Laufcache bereinigen', async () => {
+      const { removed, history } = await window.desktop.cleanRunCache();
+      setRunHistory(history);
+      notice(
+        `Laufcache bereinigt: ${removed.runs} ${removed.runs === 1 ? 'Lauf' : 'Läufe'} und ${formatBytes(removed.bytes)} entfernt.`,
+      );
+    });
+  }
   function accept(project: OpenedProject | null) {
     if (!project) return;
+    // Main replaced the run history with the opened workspace's runs.
+    void window.desktop
+      .listRuns()
+      .then(setRunHistory)
+      .catch(() => setRunHistory(null));
     setMesh(project.mesh);
     setProjectName(project.name);
     setProjectPath(project.path);
@@ -243,6 +276,7 @@ export function App() {
     await run('Projekt speichern', async () => {
       const saved = await window.desktop.saveWorkspace(view, model, result?.runId || null);
       if (saved) {
+        setRunHistory(await window.desktop.listRuns());
         setProjectPath(saved.path);
         setProjectName(saved.name);
         setDirty(false);
@@ -752,6 +786,16 @@ export function App() {
               values={resultValues!}
               selectedNodes={selectedNodes}
               selectedCell={owner}
+            />
+          )}
+          {stage === 'results' && runHistory && runHistory.runs.length > 0 && (
+            <RunHistory
+              history={runHistory}
+              model={model}
+              disabled={locked}
+              onSelect={(id) => void selectRun(id)}
+              onRemove={(id) => void removeRun(id)}
+              onClean={() => void cleanRunCache()}
             />
           )}
 
