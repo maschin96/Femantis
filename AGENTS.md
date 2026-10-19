@@ -9,7 +9,7 @@ only when relevant. For Codex instruction discovery, see the
 
 ## Repository and Project Contracts
 
-- Product: **Femantis Desktop**, currently version `0.2.0`. The private GitHub
+- Product: **Femantis Desktop**, currently version `0.2.0`. The public GitHub
   repository is [maschin96/Firmantis](https://github.com/maschin96/Firmantis);
   the repository spelling differs from the product name. The default branch is
   `main`, and the local remote is `origin`. Preserve these names unless requested.
@@ -23,7 +23,7 @@ only when relevant. For Codex instruction discovery, see the
   statements about having no repository or commit predate GitHub initialization
   on 2026-10-13; they do not describe the current repository state. Historical
   test counts are evidence for those revisions, not proof that current tests pass.
-- The numerical dependency is the separate private repository
+- The numerical dependency is the separate public (MIT) repository
   `maschin96/FEM-Toolbox`, version `1.4.0`, pinned in `scripts/setup_backend.py`
   to commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Use its public APIs;
   do not edit cached Toolbox sources or duplicate its solvers/readers in the GUI.
@@ -66,8 +66,8 @@ npm run setup:backend
 npm run dev
 ```
 
-Backend setup requires Python 3.11–3.13 and an authenticated GitHub CLI session
-with access to the private Toolbox repository. It creates `.venv`; the constraints
+Backend setup requires Python 3.11–3.13 and network access; pip downloads the
+pinned Toolbox commit anonymously. It creates `.venv`; the constraints
 file applies to Python 3.13. `FEMANTIS_PYTHON` can select another prepared runtime.
 Use the existing `unittest` backend suite rather than introducing pytest by default.
 

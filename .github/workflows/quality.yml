@@ -40,15 +40,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: npm ci
-      - name: Install pinned private Toolbox
-        env:
-          GH_TOKEN: ${{ secrets.TOOLBOX_READ_TOKEN }}
-        run: |
-          if [[ -z "$GH_TOKEN" ]]; then
-            echo '::error::TOOLBOX_READ_TOKEN fehlt (FEM-Toolbox: Contents read).'
-            exit 1
-          fi
-          npm run setup:backend
+      - name: Install pinned public Toolbox
+        run: npm run setup:backend
       - run: npm run test:backend
       - run: npm test
 
@@ -67,15 +60,8 @@ jobs:
         with:
           python-version: '3.13'
       - run: npm ci
-      - name: Install pinned private Toolbox
-        env:
-          GH_TOKEN: ${{ secrets.TOOLBOX_READ_TOKEN }}
-        run: |
-          if [[ -z "$GH_TOKEN" ]]; then
-            echo '::error::TOOLBOX_READ_TOKEN fehlt (FEM-Toolbox: Contents read).'
-            exit 1
-          fi
-          npm run setup:backend
+      - name: Install pinned public Toolbox
+        run: npm run setup:backend
       - run: npm run build
       - run: npm run test:desktop
       - name: Preserve failed desktop diagnostics
