@@ -10,8 +10,8 @@ only when relevant. For Codex instruction discovery, see the
 ## Repository and Project Contracts
 
 - Product: **Femantis Desktop**, currently version `0.2.0`. The public GitHub
-  repository is [maschin96/Firmantis](https://github.com/maschin96/Firmantis);
-  the repository spelling differs from the product name. The default branch is
+  repository is [maschin96/Femantis](https://github.com/maschin96/Femantis),
+  renamed from `maschin96/Firmantis` on 2026-10-19. The default branch is
   `main`, and the local remote is `origin`. Preserve these names unless requested.
 - This is an Electron application with React, TypeScript, Three.js, and a Python
   adapter, not a standalone Python library. Use `package.json`, `package-lock.json`,
