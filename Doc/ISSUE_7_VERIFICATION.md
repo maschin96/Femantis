@@ -85,4 +85,9 @@ Version vor #7 nutzen den flachen Altordner; dessen Bereinigung erfolgt deshalb
 nur auf ausdrücklichen Klick. GitHub Actions starten wegen der in [CI.md](CI.md)
 dokumentierten Billing-Sperre weiterhin keine Runner; es gibt keinen CI-Nachweis.
 
+Nachtrag vom 20.10.2026: Diese Aussage war beim Schreiben bereits überholt und
+nicht erneut geprüft. Der PR-Lauf 39293171476 (`a140ca1`) und der `main`-Lauf
+39294051729 nach dem Merge waren mit allen fünf Jobs grün, einschließlich
+`tests/desktop/runs.spec.ts` auf macOS 15. Siehe [CI.md](CI.md).
+
 Status: lokal verifiziert, unabhängige Review steht aus; nicht gepusht.
