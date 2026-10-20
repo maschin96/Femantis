@@ -27,7 +27,7 @@ def main():
     report = {"platform": platform.platform(), "python": platform.python_version(), "toolbox": fem_toolbox.__version__, "scope": "Python topology and binary buffers; not viewer FPS", "cases": cases}
     folder = Path(__file__).resolve().parents[1] / "Doc/evidence"
     folder.mkdir(exist_ok=True)
-    (folder / "backend-baseline.json").write_text(json.dumps(report, indent=2) + "\n")
+    (folder / "backend-baseline.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
 if __name__ == "__main__":

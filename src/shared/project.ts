@@ -79,3 +79,24 @@ export function resolveMeshPath(root: string, relative: string): string {
   }
   return absolute;
 }
+
+/**
+ * `absolute` (a resolved native path, e.g. after realpath) must lie strictly inside
+ * `root`. Unlike `resolveMeshPath`, which validates the portable `/` paths stored in a
+ * project file, this accepts the platform's own separators (backslashes on Windows, #11).
+ */
+export function assertInside(
+  root: string,
+  absolute: string,
+  paths: Pick<typeof path, 'relative' | 'isAbsolute' | 'sep'> = path,
+): string {
+  const remainder = paths.relative(root, absolute);
+  if (
+    !remainder ||
+    remainder === '..' ||
+    remainder.startsWith(`..${paths.sep}`) ||
+    paths.isAbsolute(remainder)
+  )
+    throw new Error('Die Netzdatei muss innerhalb des Projekts liegen.');
+  return absolute;
+}

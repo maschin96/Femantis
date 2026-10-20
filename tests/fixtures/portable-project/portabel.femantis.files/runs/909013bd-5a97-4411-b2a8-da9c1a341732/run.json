@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "909013bd-5a97-4411-b2a8-da9c1a341732",
+  "modelKey": "{\"boundary\":{\"dirichlet\":[{\"field\":\"T\",\"set\":\"Einspannung\",\"unit\":\"K\",\"value\":300},{\"field\":\"T\",\"set\":\"Stirnflaeche\",\"unit\":\"K\",\"value\":350}]},\"materials\":{\"T\":{\"Wärmeleiter-Ü\":{\"conductivity\":2,\"unit\":\"W/(m K)\"}}},\"physics\":\"heat\",\"regions\":{\"T\":{\"Basis\":\"Wärmeleiter-Ü\",\"Spitze\":\"Wärmeleiter-Ü\"}},\"schema_version\":1,\"units\":\"SI\"}",
+  "sourceKey": "3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160:1",
+  "inputHash": "aefc91dd95fddd4f97873844e64b2b96bed4f2dafaaef7f8478212cf53330ac5",
+  "files": {
+    "model.json": "91773a518f012c8ae794da1b24a1d0a0c87481e9c0a95b8bc9feda259317af1c",
+    "case.json": "06ef09a6749cfdb49e49611017ecefb9e771807ca024fefd1dd4d6d64856cf84",
+    "case.toml": "d7e68be1fec13a363a15e2c6f9d63eb8e52152ff08c3d36c1df821407285bb36",
+    "mesh.msh": "3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160",
+    "result.json": "eb2e4fefc11bb8a0664ba65925872b775fe57a25da6148f047f70c6403c8bcaa",
+    "result.vtu": "96dea9c0a8ffc226fdafea0bcef727e9b924ec41482f0297239d3201420490c2"
+  }
+}

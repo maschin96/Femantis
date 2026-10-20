@@ -1,8 +1,8 @@
 import { test, expect, _electron as electron } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 
 test('Tet10-Ergebnis wird quadratisch dargestellt und als solches gekennzeichnet', async () => {
-  const app = await electron.launch({ args: ['.'], cwd: process.cwd() });
+  const app = await electron.launch({ args: ['.', ...chromiumArgs], cwd: process.cwd() });
   const page = await app.firstWindow();
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));

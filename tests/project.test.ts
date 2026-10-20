@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseProject, resolveMeshPath } from '../src/shared/project';
+import path from 'node:path';
+import { assertInside, parseProject, resolveMeshPath } from '../src/shared/project';
 import { defaultView } from '../src/shared/types';
 
 const document = {
@@ -33,10 +34,25 @@ describe('Desktopprojektvertrag', () => {
   });
   it('begrenzt Netzpfade auf das Projektverzeichnis', () => {
     expect(resolveMeshPath('/tmp/projekt', 'probe.files/netz.msh')).toBe(
-      '/tmp/projekt/probe.files/netz.msh',
+      path.resolve('/tmp/projekt', 'probe.files/netz.msh'),
     );
-    for (const path of ['../fremd.msh', '/etc/passwd', 'C:\\Windows\\file', '..\\outside.msh']) {
-      expect(() => resolveMeshPath('/tmp/projekt', path)).toThrow();
+    for (const relative of [
+      '../fremd.msh',
+      '/etc/passwd',
+      'C:\\Windows\\file',
+      '..\\outside.msh',
+    ]) {
+      expect(() => resolveMeshPath('/tmp/projekt', relative)).toThrow();
     }
+  });
+  it('prüft aufgelöste native Pfade auch mit Windows-Trennzeichen (#11)', () => {
+    const win = path.win32;
+    expect(assertInside('C:\\p', 'C:\\p\\probe.files\\netz.msh', win)).toBe(
+      'C:\\p\\probe.files\\netz.msh',
+    );
+    for (const outside of ['C:\\p', 'C:\\andere\\netz.msh', 'D:\\p\\netz.msh', 'C:\\p\\..\\q'])
+      expect(() => assertInside('C:\\p', outside, win)).toThrow('innerhalb');
+    expect(assertInside('/tmp/p', '/tmp/p/a/b.msh', path.posix)).toBe('/tmp/p/a/b.msh');
+    expect(() => assertInside('/tmp/p', '/tmp/pq/b.msh', path.posix)).toThrow('innerhalb');
   });
 });

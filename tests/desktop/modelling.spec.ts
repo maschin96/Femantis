@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -15,7 +15,7 @@ let folder: string;
 const errors: string[] = [];
 test.beforeAll(async () => {
   folder = await mkdtemp(path.join(tmpdir(), 'femantis-modelling-desktop-'));
-  app = await electron.launch({ args: ['.'], cwd: process.cwd() });
+  app = await electron.launch({ args: ['.', ...chromiumArgs], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {

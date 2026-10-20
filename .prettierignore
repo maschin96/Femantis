@@ -4,3 +4,4 @@ node_modules
 .venv
 test-results
 examples/*.msh
+tests/fixtures/portable-project

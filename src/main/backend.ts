@@ -63,6 +63,8 @@ export async function requestBackend(
   return new Promise((resolve, reject) => {
     const child = spawn(python, [path.join(root, 'backend/adapter.py')], {
       cwd: root,
+      // UTF-8 for Toolbox file access too; Windows defaults to its legacy code page (#11).
+      env: { ...process.env, PYTHONUTF8: '1' },
       windowsHide: true,
       stdio: 'pipe',
     });

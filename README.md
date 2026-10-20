@@ -73,7 +73,7 @@ npm run benchmark:meshes
 npm run benchmark:viewer
 ```
 
-`test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS. `benchmark:meshes` erzeugt 100k-/1M-Tet4-Messnetze unter `.cache/viewer-benchmark`; `benchmark:viewer` misst damit in einem echten Electron-/WebGL-Fenster Ladezeit, FPS, Picking, Speicher und Ansichtswechsel (`FEMANTIS_BENCH_CASES`, `FEMANTIS_BENCH_LABEL`). Ergebnisse und Grenzen: [Issue-#8-Nachweis](Doc/ISSUE_8_VERIFICATION.md).
+`setup:backend`, `test:backend` und die Benchmarks laufen auf macOS, Linux und Windows mit denselben Befehlen: Das Setup wählt `python3` bzw. unter Windows `py -3` (abweichend: `FEMANTIS_SETUP_PYTHON`), die übrigen Skripte starten die `.venv`-Umgebung plattformgerecht. Unter Linux benötigen Desktoptests eine grafische Sitzung oder `xvfb-run`. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS. `benchmark:meshes` erzeugt 100k-/1M-Tet4-Messnetze unter `.cache/viewer-benchmark`; `benchmark:viewer` misst damit in einem echten Electron-/WebGL-Fenster Ladezeit, FPS, Picking, Speicher und Ansichtswechsel (`FEMANTIS_BENCH_CASES`, `FEMANTIS_BENCH_LABEL`). Ergebnisse und Grenzen: [Issue-#8-Nachweis](Doc/ISSUE_8_VERIFICATION.md).
 
 Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 
@@ -85,4 +85,4 @@ Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 - [Modellerstellung und Berechnungsnachweise](Doc/MODELLING_IMPLEMENTATION.md)
 - [Beispielnetze und Herkunft](examples/README.md)
 
-Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Windows/Linux und eine mitgelieferte Python-Runtime sind noch keine geprüften Auslieferungsziele.
+Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Windows 2025 und Ubuntu 24.04 werden in der CI geprüft ([#11](Doc/ISSUE_11_VERIFICATION.md)); Installer und eine mitgelieferte Python-Runtime sind noch keine geprüften Auslieferungsziele.
