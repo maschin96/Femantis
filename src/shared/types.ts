@@ -19,6 +19,8 @@ export interface MeshPacket {
   triangleOwners: Uint32Array;
   triangleFacets: Int32Array;
   activeNodes: Uint32Array;
+  /** Tet10 only: the six Triangle6 face nodes (corners, edges 01/12/20) per display triangle. */
+  triangleFaceNodes?: Uint32Array;
   cellIds: string[];
   facetIds: string[];
   pointIds: string[];

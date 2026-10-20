@@ -64,3 +64,19 @@ export const fieldLabels: Record<string, string> = {
 export function fieldLabel(id: string): string {
   return fieldLabels[id.replace(/_at_centroid$/, '')] || id;
 }
+
+/**
+ * Caption for how a field is drawn. Tet10 nodal components are exact Triangle6 fields;
+ * a magnitude interpolates nodal magnitudes and remains an approximation.
+ */
+export function interpolationLabel(
+  cellType: 'tetra4' | 'tetra10',
+  field: Pick<ResultField, 'association' | 'components'>,
+  component: string,
+): string {
+  if (field.association === 'cell') return 'Elementwerte · ohne Glättung';
+  if (cellType === 'tetra4') return 'Knotenwerte · lineare Darstellungsinterpolation';
+  return component === 'magnitude'
+    ? 'Knotenwerte · Betrag aus Knotenbeträgen quadratisch interpoliert (Näherung)'
+    : 'Knotenwerte · quadratische Triangle6-Interpolation';
+}

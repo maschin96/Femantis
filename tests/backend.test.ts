@@ -16,6 +16,15 @@ describe('Echter Python-Prozess', () => {
       1,
     );
     expect(mesh.triangleCount).toBe(16);
+    expect(mesh.triangleFaceNodes).toBeInstanceOf(Uint32Array);
+    expect(mesh.triangleFaceNodes!.length).toBe(16 * 6);
+    const cube = await importMesh(
+      process.cwd(),
+      await readFile('examples/cantilever.msh'),
+      'c.msh',
+      1,
+    );
+    expect(cube.triangleFaceNodes).toBeUndefined();
     expect(mesh.positions).toBeInstanceOf(Float64Array);
     expect(mesh.groups.find((g) => g.name === 'ground')?.members).toEqual(
       mesh.groups.find((g) => g.name === 'electrode')?.members,

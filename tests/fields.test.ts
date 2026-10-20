@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldLimits, gpuFieldValues } from '../src/renderer/viewer/fields';
+import { fieldLimits, gpuFieldValues, interpolationLabel } from '../src/renderer/viewer/fields';
 
 describe('Double-Feldwerte vor der GPU-Übertragung', () => {
   it.each([
@@ -38,5 +38,22 @@ describe('Double-Feldwerte vor der GPU-Übertragung', () => {
   });
   it('meldet eine im GPU-Format nicht darstellbare Skala statt unendlicher Anzeigewerte', () => {
     expect(() => gpuFieldValues(new Float64Array([1e308]), [0, 1])).toThrow('Grenzen vergrößern');
+  });
+});
+
+describe('Kennzeichnung der Feldinterpolation', () => {
+  const point = { association: 'point', components: ['x', 'y', 'z'] } as never;
+  const cell = { association: 'cell', components: ['scalar'] } as never;
+  it('unterscheidet Tet4, Tet10-Komponenten, Tet10-Betrag und Zellwerte', () => {
+    expect(interpolationLabel('tetra4', point, 'x')).toBe(
+      'Knotenwerte · lineare Darstellungsinterpolation',
+    );
+    expect(interpolationLabel('tetra10', point, 'x')).toBe(
+      'Knotenwerte · quadratische Triangle6-Interpolation',
+    );
+    expect(interpolationLabel('tetra10', point, 'magnitude')).toBe(
+      'Knotenwerte · Betrag aus Knotenbeträgen quadratisch interpoliert (Näherung)',
+    );
+    expect(interpolationLabel('tetra10', cell, 'scalar')).toBe('Elementwerte · ohne Glättung');
   });
 });
