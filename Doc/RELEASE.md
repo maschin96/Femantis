@@ -112,7 +112,8 @@ mit Nachweis erledigt sind.
 - [ ] `npm ci`, `npm run package:mac` auf macOS/Apple Silicon; `build.json` meldet
       `"workingTreeClean": true` und den erwarteten Commit.
 - [ ] `npm run test:package` und `FEMANTIS_PACKAGE_SANDBOX=1 npm run test:package` grün.
-- [ ] Zweiter Build aus demselben Commit liefert denselben `bundleDigest`.
+- [ ] Zweiter Build aus demselben Commit auf derselben Maschine liefert denselben
+      `bundleDigest` (maschinenübergreifend bisher nicht gleich, siehe Nachweis #10).
 - [ ] Lizenzordner im DMG gesichtet; neue Abhängigkeiten haben Lizenztexte.
 
 ### 2. Integration
