@@ -74,3 +74,17 @@ export function stepStates(state: WorkflowState): Record<Stage, boolean> {
     results: current,
   };
 }
+
+/**
+ * Which stage tabs of the ribbon can be opened. The model and calculation tabs need a
+ * model, the results tab a result; every stage tab is locked while a job runs or an
+ * unapplied JSON draft blocks conflicting operations.
+ */
+export function tabAvailable(state: WorkflowState, locked: boolean): Record<Stage, boolean> {
+  return {
+    mesh: !locked,
+    model: !locked && state.hasModel,
+    calculation: !locked && state.hasModel,
+    results: !locked && state.hasResult,
+  };
+}

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Box, Maximize, Rotate3D } from 'lucide-react';
 import type { MeshPacket, ViewState, ResultField } from '../../shared/types';
 import { Viewport } from './Viewport';
+import type { Insets } from './frame';
 
 interface Props {
   mesh: MeshPacket | null;
@@ -14,7 +15,11 @@ interface Props {
   limits?: [number, number] | null;
   displacement?: Float64Array | null;
   deformationFactor?: number;
+  /** Canvas edges covered by floating panels; overlays and framing use the free area. */
+  insets?: Insets;
 }
+
+const noInsets: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
 export function MeshViewer(props: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -34,6 +39,7 @@ export function MeshViewer(props: Props) {
         (value) => latest.current.onPick(value),
         (value) => latest.current.onCamera(value),
       );
+      viewport.current.setInsets(latest.current.insets ?? noInsets, !latest.current.view.camera);
       performance.measure('femantis:createViewport', { start, end: performance.now() });
     } catch (error) {
       setError(
@@ -55,6 +61,10 @@ export function MeshViewer(props: Props) {
     props.view.selectedGroup,
     props.view.hiddenGroups,
   ]);
+  const insets = props.insets ?? noInsets;
+  useEffect(() => {
+    viewport.current?.setInsets(insets);
+  }, [insets.top, insets.right, insets.bottom, insets.left]);
   useEffect(() => {
     viewport.current?.setSelected(props.selectedTriangle);
   }, [props.selectedTriangle]);
@@ -83,7 +93,17 @@ export function MeshViewer(props: Props) {
   ]);
 
   return (
-    <div className="viewport-shell">
+    <div
+      className="viewport-shell"
+      style={
+        {
+          '--free-top': `${insets.top}px`,
+          '--free-right': `${insets.right}px`,
+          '--free-bottom': `${insets.bottom}px`,
+          '--free-left': `${insets.left}px`,
+        } as CSSProperties
+      }
+    >
       <div ref={host} className="viewport" data-testid="viewport" />
       {!props.mesh && (
         <div className="empty-view">

@@ -194,17 +194,19 @@ test('speichert ein Projekt mit Lauf und öffnet es wieder', async () => {
 test('bricht eine laufende Berechnung ab und beendet den gebündelten Python-Prozess', async () => {
   await page.getByRole('button', { name: /03 Berechnung/ }).click();
   const before = (await page.evaluate(() => window.desktop.listRuns())).runs.length;
-  // Click „Berechnung abbrechen“ as soon as it appears, i.e. while Python is running;
-  // the small example would otherwise finish before a Playwright round trip.
+  // Click „Berechnung abbrechen“ in the ribbon as soon as it is enabled, i.e. while Python
+  // is running; the small example would otherwise finish before a Playwright round trip.
   await page.evaluate(() => {
     const observer = new MutationObserver(() => {
-      const button = document.querySelector<HTMLButtonElement>('.cancel-calculation');
+      const button = document.querySelector<HTMLButtonElement>(
+        'button[aria-label="Berechnung abbrechen"]:not(:disabled)',
+      );
       if (button) {
         observer.disconnect();
         button.click();
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
   });
   await page.getByRole('button', { name: 'Berechnen', exact: true }).click();
   await expect(page.locator('.message.error', { hasText: 'Berechnung abgebrochen.' })).toHaveCount(
@@ -232,6 +234,8 @@ test('meldet ein ungültiges Netz verständlich und bleibt bedienbar', async () 
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
   }, filename);
   const before = await page.locator('.message.error').count();
+  // The import command lives on the mesh tab of the ribbon (#36).
+  await page.getByRole('button', { name: /01 Netz/ }).click();
   await page.getByRole('button', { name: 'Netz öffnen', exact: true }).click();
   await expect(page.locator('.message.error')).toHaveCount(before + 1);
   await expect(
