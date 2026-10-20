@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "units": "SI",
+  "physics": "heat",
+  "materials": {
+    "T": {
+      "Wärmeleiter-Ü": {
+        "conductivity": 2,
+        "unit": "W/(m K)"
+      }
+    }
+  },
+  "regions": {
+    "T": {
+      "Basis": "Wärmeleiter-Ü",
+      "Spitze": "Wärmeleiter-Ü"
+    }
+  },
+  "boundary": {
+    "dirichlet": [
+      {
+        "field": "T",
+        "set": "Einspannung",
+        "value": 300,
+        "unit": "K"
+      },
+      {
+        "field": "T",
+        "set": "Stirnflaeche",
+        "value": 350,
+        "unit": "K"
+      }
+    ]
+  }
+}

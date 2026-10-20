@@ -12,7 +12,7 @@ import {
 } from 'node:fs/promises';
 import path from 'node:path';
 import { constants } from 'node:fs';
-import { parseProject, resolveMeshPath, viewSchema } from '../shared/project';
+import { assertInside, parseProject, resolveMeshPath, viewSchema } from '../shared/project';
 import type { ViewState, ModelDocument } from '../shared/types';
 import { canonicalModel, parseModelDocument } from '../shared/model';
 import { z } from 'zod';
@@ -55,7 +55,7 @@ async function runBytes(directory: string, name: string): Promise<Buffer> {
   const root = await realpath(directory);
   const filename = path.join(root, name);
   try {
-    resolveMeshPath(root, path.relative(root, await realpath(filename)));
+    assertInside(root, await realpath(filename));
     return await readFile(filename);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT')
@@ -181,7 +181,7 @@ export async function openProjectFile(filename: string): Promise<{
   const root = await realpath(path.dirname(filename));
   const sourcePath = resolveMeshPath(root, project.mesh.path);
   const actualPath = await realpath(sourcePath);
-  resolveMeshPath(root, path.relative(root, actualPath));
+  assertInside(root, actualPath);
   const source = await readMeshSource(actualPath, project.mesh.scale);
   if (
     project.mesh.name &&
@@ -195,12 +195,9 @@ export async function openProjectFile(filename: string): Promise<{
   const runs: RunFiles[] = [];
   for (const entry of project.runs ?? (project.run ? [project.run] : [])) {
     const directory = await realpath(resolveMeshPath(root, entry.path));
-    resolveMeshPath(root, path.relative(root, directory));
+    assertInside(root, directory);
     for (const file of ['result.json', 'result.vtu'])
-      resolveMeshPath(
-        directory,
-        path.relative(directory, await realpath(path.join(directory, file))),
-      );
+      assertInside(directory, await realpath(path.join(directory, file)));
     if (entry.sourceKey !== sourceKey(source))
       throw new Error('Das Ergebnis gehört zu einem anderen Netz.');
     const run: RunFiles = {
@@ -241,20 +238,20 @@ async function copyRun(
   const relative = `${folderName}/runs/${run.id}`;
   const destination = path.join(root, relative);
   await mkdir(destination, { recursive: true });
-  resolveMeshPath(root, path.relative(root, await realpath(destination)));
+  assertInside(root, await realpath(destination));
   const runRoot = await realpath(run.directory);
   for (const file of await readdir(runRoot)) {
     if (!runArtifacts.includes(file)) continue;
     const original = path.join(runRoot, file);
     const actual = await realpath(original);
-    resolveMeshPath(runRoot, path.relative(runRoot, actual));
+    assertInside(runRoot, actual);
     const target = path.join(destination, file);
     if (path.resolve(original) !== path.resolve(target)) {
       try {
         await copyFile(original, target, constants.COPYFILE_EXCL);
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-        resolveMeshPath(destination, path.relative(destination, await realpath(target)));
+        assertInside(destination, await realpath(target));
         if (sha256(await readFile(target)) !== sha256(await readFile(original)))
           throw new Error(
             'Eine gespeicherte Ergebnisdatei wurde verändert. Bitte ein anderes Speicherziel wählen.',
@@ -298,7 +295,7 @@ export async function saveProjectFile(
   const folderName = `${path.basename(filename, '.json')}.files`;
   const folder = path.join(root, folderName);
   await mkdir(folder, { recursive: true });
-  resolveMeshPath(root, path.relative(root, await realpath(folder)));
+  assertInside(root, await realpath(folder));
   const meshName = `mesh-${digest}${path.extname(source.name).toLowerCase()}`;
   const meshPath = path.join(folder, meshName);
   try {

@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
@@ -20,7 +20,7 @@ test.beforeAll(async () => {
   // An isolated run cache keeps the counts independent of earlier local sessions.
   cache = path.join(folder, 'cache');
   app = await electron.launch({
-    args: ['.'],
+    args: ['.', ...chromiumArgs],
     cwd: process.cwd(),
     env: { ...process.env, FEMANTIS_RUN_CACHE: cache },
   });

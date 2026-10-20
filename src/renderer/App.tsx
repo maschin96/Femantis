@@ -765,6 +765,7 @@ export function App() {
           {stage === 'results' && result && resultField && (
             <ResultsPanel
               result={result}
+              cellType={mesh?.cellType ?? 'tetra4'}
               field={resultField}
               component={component}
               limits={limits}

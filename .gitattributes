@@ -1,0 +1,4 @@
+# Keep byte-identical checkouts on every platform (#11): example meshes are hashed
+# and parsed, and Windows runners default to core.autocrlf=true.
+* text=auto eol=lf
+*.png binary

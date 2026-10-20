@@ -63,8 +63,9 @@ export function runtimeLayout(options: RuntimeOptions): RuntimeLayout {
         configuredPython ||
         path.join(resourcesPath, 'python', platform === 'win32' ? 'python.exe' : 'bin/python3'),
       // -E/-s: no PYTHON* variables or user site-packages leak into the bundled
-      // runtime; -B: no bytecode writes into the read-only, signed bundle.
-      pythonArgs: configuredPython ? [] : ['-E', '-s', '-B'],
+      // runtime; -B: no bytecode writes into the read-only, signed bundle; -X utf8
+      // replaces PYTHONUTF8, which -E ignores (#11).
+      pythonArgs: configuredPython ? [] : ['-E', '-s', '-B', '-X', 'utf8'],
       adapter: path.join(backend, 'adapter.py'),
       cwd: backend,
       missingRuntime:

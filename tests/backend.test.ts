@@ -20,6 +20,10 @@ describe('Echter Python-Prozess', () => {
       1,
     );
     expect(mesh.triangleCount).toBe(16);
+    expect(mesh.triangleFaceNodes).toBeInstanceOf(Uint32Array);
+    expect(mesh.triangleFaceNodes!.length).toBe(16 * 6);
+    const cube = await importMesh(backend, await readFile('examples/cantilever.msh'), 'c.msh', 1);
+    expect(cube.triangleFaceNodes).toBeUndefined();
     expect(mesh.positions).toBeInstanceOf(Float64Array);
     expect(mesh.groups.find((g) => g.name === 'ground')?.members).toEqual(
       mesh.groups.find((g) => g.name === 'electrode')?.members,
@@ -48,7 +52,7 @@ describe('Echter Python-Prozess', () => {
         await cp(path.join('backend', name), path.join(resources, name));
       const packaged = {
         ...backend,
-        pythonArgs: ['-E', '-s', '-B'],
+        pythonArgs: ['-E', '-s', '-B', '-X', 'utf8'],
         adapter: path.join(resources, 'adapter.py'),
         cwd: resources,
       };

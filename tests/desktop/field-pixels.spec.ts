@@ -6,6 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 import { build } from 'vite';
+import { chromiumArgs } from './startup';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -46,7 +47,7 @@ test.beforeAll(async () => {
     });
     app.on('window-all-closed', () => app.quit());`,
   );
-  app = await electron.launch({ args: [entry], cwd: process.cwd() });
+  app = await electron.launch({ args: [entry, ...chromiumArgs], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -117,6 +118,31 @@ test('enge benutzerdefinierte Skala begrenzt erst nach der Interpolation', async
   });
   color(result.pixels[0], [68, 1, 84]);
   color(result.pixels[1], [253, 231, 37]);
+});
+test('Tet10-Knotenfelder folgen den quadratischen Triangle6-Formfunktionen', async () => {
+  // Corners 0, midsides 1: f = 4(λ0λ1 + λ1λ2 + λ2λ0). Scale [0, 4/3]:
+  // centroid t = 1 (linear sub-triangles: 0.75); λ = (1/6, 1/6, 2/3) t = 0.75 (linear: 0.5).
+  const result = await page.evaluate(() =>
+    (
+      window as unknown as {
+        sampleQuadratic: (spec: {
+          values: number[];
+          limits: [number, number];
+          samples: [number, number][];
+        }) => { pixels: number[][]; error: number };
+      }
+    ).sampleQuadratic({
+      values: [0, 0, 0, 1, 1, 1],
+      limits: [0, 4 / 3],
+      samples: [
+        [-1 / 3, -1 / 3],
+        [-2 / 3, 1 / 3],
+      ],
+    }),
+  );
+  color(result.pixels[0], [253, 231, 37]);
+  color(result.pixels[1], [94, 201, 98]);
+  expect(result.error).toBe(0);
 });
 test('maskierte Knoten entfernen die betroffene Fläche; Zellwerte bleiben ungeglättet', async () => {
   const masked = await sample({

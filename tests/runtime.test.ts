@@ -55,7 +55,7 @@ describe('Laufzeitpfade', () => {
     });
     // Isolate the bundled interpreter from PYTHON* variables and user site-packages
     // and never write bytecode into the signed, read-only bundle.
-    expect(layout.backend.pythonArgs).toEqual(['-E', '-s', '-B']);
+    expect(layout.backend.pythonArgs).toEqual(['-E', '-s', '-B', '-X', 'utf8']);
     expect(layout.backend.missingRuntime).not.toContain('npm');
     expect(layout.examples).toBe(path.join(resources, 'examples'));
   });

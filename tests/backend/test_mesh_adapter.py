@@ -50,6 +50,29 @@ class MeshAdapterTests(unittest.TestCase):
         self.assertEqual(set(data["arrays"]["triangles"]), set(range(10)))
         self.assertEqual(data["facet_ids"], ["77"])
 
+    def test_tet10_display_triangles_name_their_triangle6_face(self):
+        """Each display triangle lists the six nodes of its face: corners, then edge 01/12/20."""
+        points = np.array([[0,0,0], [1,0,0], [0,1,0], [0,0,1], [.5,0,0], [.5,.5,0], [0,.5,0], [0,0,.5], [.5,0,.5], [0,.5,.5]])
+        mesh = Mesh(points=points, tetra10=[list(range(10))])
+        data = mesh_payload(mesh)
+        faces = data["arrays"]["triangleFaceNodes"].reshape(-1, 6)
+        triangles = data["arrays"]["triangles"].reshape(-1, 3)
+        self.assertEqual(faces.shape, (16, 6))
+        self.assertEqual(faces.dtype.str, "<u4")
+        for face, triangle in zip(faces, triangles):
+            self.assertTrue(set(triangle) <= set(face))
+            corners = points[face[:3]]
+            # Straight-edged Tet10: midside nodes lie at the edge midpoints.
+            for midside, (a, b) in zip(face[3:], ((0, 1), (1, 2), (2, 0))):
+                np.testing.assert_allclose(points[midside], (corners[a] + corners[b]) / 2)
+        # Four consecutive display triangles share one face; four faces in total.
+        self.assertEqual(len({tuple(face) for face in faces}), 4)
+        for start in range(0, 16, 4):
+            self.assertTrue((faces[start:start + 4] == faces[start]).all())
+
+    def test_tet4_payload_has_no_triangle6_buffer(self):
+        self.assertNotIn("triangleFaceNodes", mesh_payload(self.two_tetrahedra())["arrays"])
+
     def test_binary_artifact_roundtrip_retains_double_coordinates(self):
         data = mesh_payload(self.two_tetrahedra())
         with tempfile.TemporaryDirectory() as folder:

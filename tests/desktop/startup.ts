@@ -5,3 +5,12 @@
  * startup waits use it; assertions after user actions keep the default.
  */
 export const backendStartup = { timeout: 30_000 };
+
+/**
+ * Extra Chromium switches for runners without a GPU (#11). Chromium blocklists software
+ * OpenGL (Mesa llvmpipe under Xvfb) for WebGL; the Linux CI job sets
+ * FEMANTIS_TEST_CHROMIUM_ARGS="--ignore-gpu-blocklist". Unset locally and on macOS/Windows.
+ */
+export const chromiumArgs = (process.env.FEMANTIS_TEST_CHROMIUM_ARGS ?? '')
+  .split(' ')
+  .filter(Boolean);

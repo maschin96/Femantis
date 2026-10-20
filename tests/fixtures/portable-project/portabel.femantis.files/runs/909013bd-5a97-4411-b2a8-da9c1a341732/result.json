@@ -1,0 +1,2827 @@
+{
+  "bundle_schema_version": 1,
+  "fields": {
+    "point": {
+      "heat_reactions_W": {
+        "active_node_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107
+        ],
+        "components": [
+          "scalar"
+        ],
+        "inactive_padding": 0.0,
+        "kind": "raw",
+        "shape": [
+          108
+        ],
+        "unit": "W"
+      },
+      "heat_residual_W": {
+        "active_node_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107
+        ],
+        "components": [
+          "scalar"
+        ],
+        "inactive_padding": 0.0,
+        "kind": "raw",
+        "shape": [
+          108
+        ],
+        "unit": "W"
+      },
+      "temperature_K": {
+        "active_node_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107
+        ],
+        "components": [
+          "scalar"
+        ],
+        "inactive_padding": 0.0,
+        "kind": "raw",
+        "shape": [
+          108
+        ],
+        "unit": "K"
+      }
+    },
+    "tetra4": {
+      "heat_flux_W_m2": {
+        "cell_type": "tetra4",
+        "components": [
+          "x",
+          "y",
+          "z"
+        ],
+        "kind": "raw",
+        "shape": [
+          288,
+          3
+        ],
+        "triangle3_padding": 0.0,
+        "unit": "W/m^2"
+      },
+      "temperature_gradient_K_m": {
+        "cell_type": "tetra4",
+        "components": [
+          "x",
+          "y",
+          "z"
+        ],
+        "kind": "raw",
+        "shape": [
+          288,
+          3
+        ],
+        "triangle3_padding": 0.0,
+        "unit": "K/m"
+      }
+    }
+  },
+  "files": {
+    "fields": "result.vtu",
+    "fields_sha256": "96dea9c0a8ffc226fdafea0bcef727e9b924ec41482f0297239d3201420490c2"
+  },
+  "limitations": [
+    "Stationary linear Tet4 result; no mesh convergence or experimental validation implied",
+    "Cell fields are raw element values; no nodal averaging"
+  ],
+  "mesh": {
+    "facet_sets": [
+      "Einspannung",
+      "Mantel",
+      "Stirnflaeche"
+    ],
+    "points": 108,
+    "tetra4_cells": 288,
+    "tetra4_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286,
+      287
+    ],
+    "triangle3_facets": 184,
+    "volume_sets": [
+      "Basis",
+      "Spitze"
+    ]
+  },
+  "metrics": {
+    "heat": {
+      "convection_outflow_W": 0.0,
+      "dirichlet_inflow_W": -5.05914754533876e-14,
+      "power_balance_W": -5.05914754533876e-14,
+      "prescribed_outflow_W": -0.0,
+      "relative_residual": 7.625728658114055e-17,
+      "source_power_W": 0.0
+    }
+  },
+  "model_schema_version": 1,
+  "physics": "heat",
+  "provenance": {
+    "input_sha256": "aefc91dd95fddd4f97873844e64b2b96bed4f2dafaaef7f8478212cf53330ac5",
+    "schema_version": 1,
+    "solver": {
+      "name": "fem_toolbox.model.Model.solve.heat",
+      "parameters": {
+        "effective_materials": {
+          "T": {
+            "catalog": {
+              "W\u00e4rmeleiter-\u00dc": {
+                "conductivity": [
+                  [
+                    2.0,
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    2.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0,
+                    2.0
+                  ]
+                ],
+                "unit": "W/(m K)"
+              }
+            },
+            "cells": [
+              {
+                "id": 0,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 1,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 2,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 3,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 4,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 5,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 6,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 7,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 8,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 9,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 10,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 11,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 12,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 13,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 14,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 15,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 16,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 17,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 18,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 19,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 20,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 21,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 22,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 23,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 24,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 25,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 26,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 27,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 28,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 29,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 30,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 31,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 32,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 33,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 34,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 35,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 36,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 37,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 38,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 39,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 40,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 41,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 42,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 43,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 44,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 45,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 46,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 47,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 48,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 49,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 50,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 51,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 52,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 53,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 54,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 55,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 56,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 57,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 58,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 59,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 60,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 61,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 62,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 63,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 64,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 65,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 66,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 67,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 68,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 69,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 70,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 71,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 72,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 73,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 74,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 75,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 76,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 77,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 78,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 79,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 80,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 81,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 82,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 83,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 84,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 85,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 86,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 87,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 88,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 89,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 90,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 91,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 92,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 93,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 94,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 95,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 96,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 97,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 98,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 99,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 100,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 101,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 102,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 103,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 104,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 105,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 106,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 107,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 108,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 109,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 110,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 111,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 112,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 113,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 114,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 115,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 116,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 117,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 118,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 119,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 120,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 121,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 122,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 123,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 124,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 125,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 126,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 127,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 128,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 129,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 130,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 131,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 132,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 133,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 134,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 135,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 136,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 137,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 138,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 139,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 140,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 141,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 142,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 143,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 144,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 145,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 146,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 147,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 148,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 149,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 150,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 151,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 152,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 153,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 154,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 155,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 156,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 157,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 158,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 159,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 160,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 161,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 162,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 163,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 164,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 165,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 166,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 167,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 168,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 169,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 170,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 171,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 172,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 173,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 174,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 175,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 176,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 177,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 178,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 179,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 180,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 181,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 182,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 183,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 184,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 185,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 186,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 187,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 188,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 189,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 190,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 191,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 192,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 193,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 194,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 195,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 196,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 197,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 198,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 199,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 200,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 201,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 202,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 203,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 204,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 205,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 206,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 207,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 208,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 209,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 210,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 211,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 212,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 213,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 214,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 215,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 216,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 217,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 218,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 219,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 220,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 221,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 222,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 223,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 224,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 225,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 226,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 227,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 228,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 229,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 230,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 231,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 232,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 233,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 234,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 235,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 236,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 237,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 238,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 239,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 240,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 241,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 242,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 243,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 244,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 245,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 246,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 247,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 248,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 249,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 250,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 251,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 252,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 253,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 254,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 255,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 256,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 257,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 258,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 259,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 260,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 261,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 262,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 263,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Basis"
+                ]
+              },
+              {
+                "id": 264,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 265,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 266,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 267,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 268,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 269,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 270,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 271,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 272,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 273,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 274,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 275,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 276,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 277,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 278,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 279,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 280,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 281,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 282,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 283,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 284,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 285,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 286,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              },
+              {
+                "id": 287,
+                "material": "W\u00e4rmeleiter-\u00dc",
+                "regions": [
+                  "Spitze"
+                ]
+              }
+            ],
+            "field": "T"
+          }
+        },
+        "field_solver": "fem_toolbox.solvers.heat.solve_heat",
+        "field_solver_input_sha256": "dc242d57aa909dd406bbead725586f2b17b51fe2bf830eb00655fd2434caaeab",
+        "material_inputs": {
+          "T": {
+            "W\u00e4rmeleiter-\u00dc": {
+              "si_factors": {
+                "conductivity": 1.0
+              },
+              "source": {
+                "conductivity": 2,
+                "unit": "W/(m K)"
+              },
+              "units": {
+                "unit": "W/(m K)"
+              }
+            }
+          }
+        },
+        "model_schema_version": 1,
+        "units": "SI"
+      }
+    },
+    "toolbox_version": "1.4.0"
+  },
+  "provenance_schema_version": 1,
+  "solver_provenance": {
+    "heat": {
+      "input_sha256": "dc242d57aa909dd406bbead725586f2b17b51fe2bf830eb00655fd2434caaeab",
+      "schema_version": 1,
+      "solver": {
+        "name": "fem_toolbox.solvers.heat.solve_heat",
+        "parameters": {
+          "backend": "scipy.sparse.linalg.splu",
+          "field_location": "element_constant",
+          "flux_convention": "positive_outward",
+          "input_schema": "heat-discrete-v1",
+          "load_quadrature_degree": 2,
+          "neumann_relative_tolerance": 1e-10,
+          "pivot_tolerance": 1e-12,
+          "power_roundoff_factor": 100,
+          "relative_power_tolerance": 1e-09,
+          "relative_residual_tolerance": 1e-09,
+          "scaling": "diagonal"
+        }
+      },
+      "toolbox_version": "1.4.0"
+    }
+  },
+  "solver_status": "converged",
+  "toolbox_version": "1.4.0"
+}

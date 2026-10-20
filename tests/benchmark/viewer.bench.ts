@@ -10,7 +10,7 @@ import { test, expect, _electron as electron, type Page } from '@playwright/test
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { backendStartup } from '../desktop/startup';
+import { backendStartup, chromiumArgs } from '../desktop/startup';
 
 const folder = path.resolve('.cache/viewer-benchmark');
 const label = process.env.FEMANTIS_BENCH_LABEL || 'local';
@@ -102,7 +102,7 @@ test.setTimeout(30 * 60_000);
 test('Viewerleistung je Netzgröße', async () => {
   const meshes = JSON.parse(await readFile(path.join(folder, 'meshes.json'), 'utf8'));
   const app = await electron.launch({
-    args: ['--js-flags=--expose-gc', '--enable-precise-memory-info', '.'],
+    args: ['--js-flags=--expose-gc', '--enable-precise-memory-info', '.', ...chromiumArgs],
     cwd: process.cwd(),
   });
   const page = await app.firstWindow();

@@ -68,7 +68,7 @@ Ungespeicherte Läufe liegen im lokalen Laufcache `.cache/runs/session-<uuid>/`,
 
 Projektdateien mit Modellen/Ergebnissen verwenden Desktop-Schema 2; reine Viewer-Projekte mit Schema 1 bleiben lesbar. Bei Weitergabe Projektdatei und gesamten `.files`-Ordner zusammen kopieren. Laufordner enthalten Eingabesnapshot, Netz sowie das unveränderte VTU/JSON-Ergebnisbündel der Toolbox. Neue Läufe speichern außerdem `model.json` und `run.json`: Der SHA-256-Wert des Laufnachweises steht im Projekt und bindet Originalnetz samt Maßstab, gerechnete Modellrevision, Eingabesnapshot und Ergebnisdateien. Beim Öffnen werden auch Netzgeometrie, Topologie, Feldgrößen und Physik gegen den Lauf geprüft. Veränderte oder fehlende Laufdateien erfordern eine Neuberechnung. Ältere Schema-2-Läufe ohne Laufnachweis bleiben lesbar, werden aber sichtbar als **Zuordnung nicht verifiziert** gekennzeichnet; Speichern stuft sie nicht nachträglich hoch. Der Nachweis schützt die Zuordnung innerhalb eines unveränderten Projekts; er ist keine Signatur gegen eine gemeinsame bewusste Neuschreibung von Projektdatei und allen Laufdateien.
 
-Der erste Rechenumfang ist linear und stationär. Tet10-Rechnungen sind über die vorhandenen Toolbox-Operatoren möglich; die nodale Viewer-Darstellung auf Triangle6-Teilflächen bleibt eine ausdrücklich lineare Darstellungsapproximation, keine exakte quadratische Feldinterpolation. Schwerpunktfelder sind gekennzeichnet. CAD-Bearbeitung, gekoppelte Physiken, Zeit-/Frequenzserien sowie signierte und notarisierte Installationspakete folgen separat.
+Der erste Rechenumfang ist linear und stationär. Tet10-Rechnungen sind über die vorhandenen Toolbox-Operatoren möglich; nodale Feldkomponenten werden auf den Triangle6-Außenflächen geradkantiger Tet10 mit den quadratischen Formfunktionen exakt dargestellt (Auswertung pro Bildpunkt). Ein Betrag interpoliert dagegen die Knotenbeträge und ist als Näherung gekennzeichnet; verformte Tet10-Flächen werden an 15 Punkten je Fläche exakt verschoben und dazwischen eben dargestellt ([Nachweis](Doc/ISSUE_9_VERIFICATION.md)). Schwerpunktfelder sind gekennzeichnet. CAD-Bearbeitung, gekoppelte Physiken, Zeit-/Frequenzserien sowie notarisierte Installationspakete folgen separat.
 
 ## Prüfungen
 
@@ -82,7 +82,7 @@ npm run benchmark:meshes
 npm run benchmark:viewer
 ```
 
-`test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS. `benchmark:meshes` erzeugt 100k-/1M-Tet4-Messnetze unter `.cache/viewer-benchmark`; `benchmark:viewer` misst damit in einem echten Electron-/WebGL-Fenster Ladezeit, FPS, Picking, Speicher und Ansichtswechsel (`FEMANTIS_BENCH_CASES`, `FEMANTIS_BENCH_LABEL`). Ergebnisse und Grenzen: [Issue-#8-Nachweis](Doc/ISSUE_8_VERIFICATION.md).
+`setup:backend`, `test:backend` und die Benchmarks laufen auf macOS, Linux und Windows mit denselben Befehlen: Das Setup wählt `python3` bzw. unter Windows `py -3` (abweichend: `FEMANTIS_SETUP_PYTHON`), die übrigen Skripte starten die `.venv`-Umgebung plattformgerecht. Unter Linux benötigen Desktoptests eine grafische Sitzung oder `xvfb-run`. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS. `benchmark:meshes` erzeugt 100k-/1M-Tet4-Messnetze unter `.cache/viewer-benchmark`; `benchmark:viewer` misst damit in einem echten Electron-/WebGL-Fenster Ladezeit, FPS, Picking, Speicher und Ansichtswechsel (`FEMANTIS_BENCH_CASES`, `FEMANTIS_BENCH_LABEL`). Ergebnisse und Grenzen: [Issue-#8-Nachweis](Doc/ISSUE_8_VERIFICATION.md).
 
 Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 
@@ -95,7 +95,7 @@ Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 - [Auslieferung und Releasecheckliste](Doc/RELEASE.md)
 - [Beispielnetze und Herkunft](examples/README.md)
 
-Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Ein ad-hoc-signiertes macOS/Apple-Silicon-Paket mit gebündelter Python-Runtime ist lokal und offline geprüft ([#10](https://github.com/maschin96/Femantis/issues/10)); Developer-ID-Signierung und Notarisierung sind zurückgestellt. Windows/Linux sind noch keine geprüften Auslieferungsziele.
+Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Windows 2025 und Ubuntu 24.04 werden in der CI geprüft ([#11](Doc/ISSUE_11_VERIFICATION.md)); Ein ad-hoc-signiertes macOS/Apple-Silicon-Paket mit gebündelter Python-Runtime ist lokal und offline geprüft ([#10](https://github.com/maschin96/Femantis/issues/10)); Developer-ID-Signierung und Notarisierung sind zurückgestellt. Installer für Windows/Linux sind noch keine geprüften Auslieferungsziele.
 
 ## Lizenz
 

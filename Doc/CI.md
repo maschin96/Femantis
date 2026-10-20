@@ -6,7 +6,8 @@
 |---|---|---|
 | Frontend · Node 22 | `ubuntu-24.04` | `npm ci`, `npm run build` einschließlich Typprüfung |
 | Backend · Python 3.11/3.12/3.13 | `ubuntu-24.04`, Matrix ohne `fail-fast` | `npm ci`, `npm run setup:backend` (öffentliche Toolbox am festen Commit), unter 3.13 Prüfung der installierten Versionen gegen `backend/constraints.txt`, `npm run test:backend`, `npm test` (Vitest einschließlich echter Python-Läufe) |
-| Desktop · macOS 15 | `macos-15` (arm64), Python 3.13 | `npm ci`, Toolbox-Setup, `npm run build`, `npm run test:desktop` mit echtem Electron/WebGL; bei Fehlern `test-results/` sieben Tage als Artefakt `desktop-test-results` |
+| Backend · Python 3.13 · Windows | `windows-2025` | wie oben (#11) |
+| Desktop · macOS 15 / Windows 2025 / Ubuntu 24.04 | `macos-15` (arm64), `windows-2025`, `ubuntu-24.04`; Python 3.13 | `npm ci`, Toolbox-Setup, `npm run build`, `npm run test:desktop` mit echtem Electron/WebGL. Unter Linux mit `xvfb-run` (Software-OpenGL, dafür `--ignore-gpu-blocklist` nur in den Tests) und freigegebenen Benutzer-Namespaces für die Chromium-Sandbox (#11). Bei Fehlern `test-results/` sieben Tage als Artefakt `desktop-test-results-<os>` |
 | Package · macOS 15 | `macos-15` (arm64), ohne `setup-python` und `.venv` | `npm ci`, `npm run package:mac` (gepinntes CPython, Toolbox, Lizenzen, Ad-hoc-Signatur, DMG), Ausgabe von Build-Manifest und `SHA256SUMS`, `npm run test:package` normal und mit `FEMANTIS_PACKAGE_SANDBOX=1` (offline); bei Fehlern `test-results/` als `package-test-results`. Das DMG wird nicht hochgeladen ([Auslieferung](RELEASE.md)). |
 
 Backend-, Desktop- und Paketjobs warten auf den Frontend-Job und laufen nur für Branches
@@ -33,7 +34,7 @@ ist eine eigene Entscheidung.
 3.11/3.12 erhalten die Versionsbereiche aus den Toolbox-Metadaten. Weil die
 aktuellen Versionen dort zufällig gleich sind, belegt ein grüner Lauf allein nicht,
 dass die Constraints wirken. Der 3.13-Job prüft deshalb mit
-`.venv/bin/python scripts/setup_backend.py --check-constraints` jede gepinnte
+`node scripts/venv-python.mjs scripts/setup_backend.py --check-constraints` jede gepinnte
 Version und scheitert bei einer Abweichung.
 
 ## Beobachtete Läufe
@@ -57,5 +58,5 @@ Lauf 39371920834 (`main` @ `7d1de63`, 20.10.2026):
 
 Eine separate Repository-Einstellung. Am 20.10.2026 meldete die GitHub-API für
 `main` „Branch not protected“ (HTTP 404). Erforderliche Checks werden also nicht
-erzwungen; ein PR ist erst integrierbar, wenn alle Jobs (seit #10 sechs) grün sind. Ob Checks
+erzwungen; ein PR ist erst integrierbar, wenn alle Jobs einschließlich „Package · macOS 15“ (#10) grün sind. Ob Checks
 verpflichtend werden sollen, entscheidet der Repository-Eigentümer.

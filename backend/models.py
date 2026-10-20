@@ -19,8 +19,8 @@ def solve_model(mesh, document, folder, progress=None):
     folder.mkdir(parents=True, exist_ok=True)
     progress("validating")
     model = validate_model(mesh, document)
-    (folder / "case.json").write_text(json.dumps(model.to_document(), indent=2, allow_nan=False) + "\n")
-    (folder / "case.toml").write_text(dump_toml(model.to_document()))
+    (folder / "case.json").write_text(json.dumps(model.to_document(), indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    (folder / "case.toml").write_text(dump_toml(model.to_document()), encoding="utf-8")
     progress("solving")
     result = model.solve()
     progress("exporting")
@@ -33,7 +33,7 @@ def read_result(folder, *, expected_mesh=None, expected_physics=None):
     import numpy as np
     from fem_toolbox.io import read_vtu
     folder = Path(folder)
-    manifest = json.loads((folder / "result.json").read_text())
+    manifest = json.loads((folder / "result.json").read_text(encoding="utf-8"))
     if manifest["bundle_schema_version"] not in (1, 2) or manifest["solver_status"] != "converged":
         raise ValueError("Nicht unterstütztes oder unvollständiges Ergebnisbündel.")
     if manifest["files"]["fields"] != "result.vtu":

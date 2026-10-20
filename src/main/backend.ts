@@ -61,6 +61,9 @@ export async function requestBackend(
   return new Promise((resolve, reject) => {
     const child = spawn(backend.python, [...backend.pythonArgs, backend.adapter], {
       cwd: backend.cwd,
+      // UTF-8 for Toolbox file access too; Windows defaults to its legacy code page (#11).
+      // The bundled interpreter ignores PYTHON* (-E) and gets -X utf8 instead (runtime.ts).
+      env: { ...process.env, PYTHONUTF8: '1' },
       windowsHide: true,
       stdio: 'pipe',
     });
@@ -381,6 +384,22 @@ export async function importMesh(
       arrays.activeNodes.some((index) => index >= manifest.point_count)
     )
       throw new Error('Ungültige Netzindizes oder Koordinaten.');
+    const faceNodes = arrays.triangleFaceNodes;
+    if (manifest.cell_type === 'tetra10') {
+      // Quadratic display needs each display triangle's Triangle6 face (#9).
+      if (
+        !(faceNodes instanceof Uint32Array) ||
+        faceNodes.length !== manifest.triangle_count * 6 ||
+        faceNodes.some((index) => index >= manifest.point_count)
+      )
+        throw new Error('Unvollständiger Tet10-Flächenvertrag.');
+      for (let triangle = 0; triangle < manifest.triangle_count; triangle++) {
+        const face = faceNodes.subarray(triangle * 6, triangle * 6 + 6);
+        for (let local = 0; local < 3; local++)
+          if (!face.includes(arrays.triangles[triangle * 3 + local]))
+            throw new Error('Unvollständiger Tet10-Flächenvertrag.');
+      }
+    } else if (faceNodes !== undefined) throw new Error('Unerwartete Tet10-Flächendaten.');
     const groups = manifest.groups.map((group) => {
       const members = arrays[group.members];
       if (
@@ -407,6 +426,7 @@ export async function importMesh(
       triangleOwners: arrays.triangleOwners,
       triangleFacets: arrays.triangleFacets,
       activeNodes: arrays.activeNodes,
+      ...(faceNodes instanceof Uint32Array ? { triangleFaceNodes: faceNodes } : {}),
       cellIds: manifest.cell_ids,
       facetIds: manifest.facet_ids,
       pointIds: manifest.point_ids,

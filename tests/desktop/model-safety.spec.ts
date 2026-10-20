@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 import { mkdtemp, readFile, writeFile, copyFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -16,7 +16,7 @@ let folder: string;
 const errors: string[] = [];
 test.beforeAll(async () => {
   folder = await mkdtemp(path.join(tmpdir(), 'femantis-model-safety-'));
-  app = await electron.launch({ args: ['.'], cwd: process.cwd() });
+  app = await electron.launch({ args: ['.', ...chromiumArgs], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   await expect(page.getByTestId('cell-count')).toHaveText('288', backendStartup);

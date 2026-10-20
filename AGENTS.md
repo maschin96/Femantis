@@ -46,8 +46,9 @@ only when relevant. For Codex instruction discovery, see the
   Gmsh internal indices must not be presented as original IDs.
 - Solver inputs use SI units; preserve the documented m/mm import conversion and
   units in forms and results. GPU centering and deformation are display operations
-  and must not change numerical inputs. Tet10 visualization uses linear
-  interpolation on subdivided faces and must remain identified as an approximation.
+  and must not change numerical inputs. Tet10 nodal components use exact Triangle6
+  (quadratic) interpolation on straight-edged faces (#9); Tet10 magnitudes interpolate
+  nodal magnitudes and must remain identified as an approximation.
 - Current modelling covers stationary heat, linear elasticity, and electrostatics
   with Toolbox Model schema 1. Do not imply that CAD, coupled/transient solvers,
   or installers are implemented without implementing and verifying them.
@@ -82,8 +83,8 @@ git diff --check
 ```
 
 - TypeScript and integration tests use Vitest; backend tests use `unittest`.
-  `npm run test:backend` uses `.venv/bin/python`; on Windows use
-  `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v`.
+  `npm run test:backend` runs the `.venv` Python through `scripts/venv-python.mjs`
+  on every platform; `npm run setup:backend` picks `python3`, or `py -3` on Windows.
 - `npm run build` includes type checking. Desktop tests use Playwright with a real
   Electron/WebGL window and the prepared backend; run them for changed user flows,
   rendering, IPC, or persistence. Mock native dialog responses only at the
@@ -91,10 +92,10 @@ git diff --check
 - Run benchmarks when changing topology or binary transfer performance; they
   measure backend work, not interactive FPS. Documentation-only edits require
   content, path, command, and whitespace checks, not the executable test suites.
-- Development evidence currently covers macOS/Apple Silicon. Do not claim Windows,
-  Linux, installer, or bundled-runtime support has been practically verified
-  without new results. No CI workflow is currently tracked; do not claim CI passed
-  or that branch protection exists without checking the current repository.
+- Local development evidence covers macOS/Apple Silicon. `.github/workflows/quality.yml`
+  also runs on Ubuntu 24.04 and Windows 2025 (#11); report each platform only from an
+  observed run. Do not claim installer or bundled-runtime support without new results,
+  or CI success or branch protection without checking the current repository.
 - Keep TypeScript formatting consistent with `.prettierrc.json` (single quotes,
   trailing commas, 100-column width). Preserve focused diffs in Python as well.
 - Track all source, tests, documentation, evidence screenshots, examples, and

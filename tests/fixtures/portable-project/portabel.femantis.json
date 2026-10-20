@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "name": "portabel",
+  "mesh": {
+    "path": "portabel.femantis.files/mesh-3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160.msh",
+    "sha256": "3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160",
+    "scale": 1,
+    "name": "cantilever.msh"
+  },
+  "view": {
+    "mode": "mesh",
+    "showNodes": false,
+    "showAxes": true,
+    "selectedGroup": null,
+    "hiddenGroups": [],
+    "camera": null
+  },
+  "model": {
+    "schema_version": 1,
+    "units": "SI",
+    "physics": "heat",
+    "materials": {
+      "T": {
+        "Wärmeleiter-Ü": {
+          "conductivity": 2,
+          "unit": "W/(m K)"
+        }
+      }
+    },
+    "regions": {
+      "T": {
+        "Basis": "Wärmeleiter-Ü",
+        "Spitze": "Wärmeleiter-Ü"
+      }
+    },
+    "boundary": {
+      "dirichlet": [
+        {
+          "field": "T",
+          "set": "Einspannung",
+          "value": 300,
+          "unit": "K"
+        },
+        {
+          "field": "T",
+          "set": "Stirnflaeche",
+          "value": 350,
+          "unit": "K"
+        }
+      ]
+    }
+  },
+  "run": {
+    "id": "909013bd-5a97-4411-b2a8-da9c1a341732",
+    "path": "portabel.femantis.files/runs/909013bd-5a97-4411-b2a8-da9c1a341732",
+    "modelKey": "{\"boundary\":{\"dirichlet\":[{\"field\":\"T\",\"set\":\"Einspannung\",\"unit\":\"K\",\"value\":300},{\"field\":\"T\",\"set\":\"Stirnflaeche\",\"unit\":\"K\",\"value\":350}]},\"materials\":{\"T\":{\"Wärmeleiter-Ü\":{\"conductivity\":2,\"unit\":\"W/(m K)\"}}},\"physics\":\"heat\",\"regions\":{\"T\":{\"Basis\":\"Wärmeleiter-Ü\",\"Spitze\":\"Wärmeleiter-Ü\"}},\"schema_version\":1,\"units\":\"SI\"}",
+    "sourceKey": "3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160:1",
+    "provenanceSha256": "5ded75e608df51dc797ba0a916d3719d9ed04f0b350295e6e6d7a42c52cab98b",
+    "createdAt": "2026-10-20T08:00:00.000Z"
+  },
+  "runs": [
+    {
+      "id": "909013bd-5a97-4411-b2a8-da9c1a341732",
+      "path": "portabel.femantis.files/runs/909013bd-5a97-4411-b2a8-da9c1a341732",
+      "modelKey": "{\"boundary\":{\"dirichlet\":[{\"field\":\"T\",\"set\":\"Einspannung\",\"unit\":\"K\",\"value\":300},{\"field\":\"T\",\"set\":\"Stirnflaeche\",\"unit\":\"K\",\"value\":350}]},\"materials\":{\"T\":{\"Wärmeleiter-Ü\":{\"conductivity\":2,\"unit\":\"W/(m K)\"}}},\"physics\":\"heat\",\"regions\":{\"T\":{\"Basis\":\"Wärmeleiter-Ü\",\"Spitze\":\"Wärmeleiter-Ü\"}},\"schema_version\":1,\"units\":\"SI\"}",
+      "sourceKey": "3f3cf6b3afdbf7590ce22b8981e6bb304b30428b4abf00f75bd0b15fed5a6160:1",
+      "provenanceSha256": "5ded75e608df51dc797ba0a916d3719d9ed04f0b350295e6e6d7a42c52cab98b",
+      "createdAt": "2026-10-20T08:00:00.000Z"
+    }
+  ]
+}

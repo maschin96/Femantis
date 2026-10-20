@@ -75,7 +75,7 @@ describe('Lokaler Laufcache', () => {
     const outside = path.join(root, 'fremd');
     await fakeRun(outside, 50);
     const link = path.join(cacheRoot, randomUUID());
-    await symlink(outside, link, 'dir');
+    await symlink(outside, link, process.platform === 'win32' ? 'junction' : 'dir');
 
     const removed = await cache.prune([kept]);
 
