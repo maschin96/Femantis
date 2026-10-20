@@ -124,16 +124,16 @@ jobs:
       # No setup-python and no .venv: the package brings its own pinned CPython.
       - run: npm run package:mac
       - run: cat dist/*.build.json dist/SHA256SUMS
-      # Per-file manifest behind bundleDigest, for comparing builds across machines (#10).
+      # Per-file manifests behind bundleDigest and contentDigest, for comparing builds (#10).
       - name: Preserve bundle manifest
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: bundle-manifest
           path: |
             dist/*.bundle-manifest.txt
+            dist/*.content-manifest.txt
             dist/*.build.json
-            dist/*.dmg
-          retention-days: 7
+          retention-days: 30
       - run: npm run test:package
       - name: Offline smoke test in Seatbelt sandbox
         run: npm run test:package

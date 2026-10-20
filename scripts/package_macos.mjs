@@ -31,6 +31,7 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { bundleDigest, contentDigest, removeEmptyDirectories } from './bundle-digest.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -373,29 +374,6 @@ function signAdHoc(app) {
   return binaries.length;
 }
 
-/**
- * Content digest of the signed bundle: sorted relative paths with file SHA-256 values and
- * symlink targets. Two builds from the same inputs can be compared by this value even
- * though the DMG itself contains timestamps.
- */
-async function bundleDigest(app) {
-  const entries = [];
-  const visit = async (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) =>
-      a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-    )) {
-      const full = path.join(directory, entry.name);
-      const relative = path.relative(app, full);
-      if (entry.isSymbolicLink()) entries.push(`L ${relative} ${readlinkSync(full)}`);
-      else if (entry.isDirectory()) await visit(full);
-      else entries.push(`F ${relative} ${await sha256(full)}`);
-    }
-  };
-  await visit(app);
-  const manifest = entries.join('\n') + '\n';
-  return { manifest, digest: createHash('sha256').update(manifest).digest('hex') };
-}
-
 /** The app inside the finished image must carry an intact signature. */
 function verifyImage(dmg) {
   const mount = path.join(work, 'mount');
@@ -449,6 +427,9 @@ async function main() {
     afterPrune: [
       async ({ buildPath }) => {
         const modules = path.join(buildPath, 'node_modules');
+        // Pruned dev dependencies leave empty (scope) folders, depending on the npm version;
+        // app.asar would record them and differ between machines.
+        if (existsSync(modules)) removeEmptyDirectories(modules);
         for (const entry of existsSync(modules) ? readdirSync(modules) : [])
           if (entry.startsWith('@'))
             for (const scoped of readdirSync(path.join(modules, entry)))
@@ -470,6 +451,7 @@ async function main() {
 
   const signed = signAdHoc(app);
   const bundle = await bundleDigest(app);
+  const content = await contentDigest(app);
 
   step('DMG erstellen');
   const name = `Femantis-${pkg.version}-mac-arm64`;
@@ -511,10 +493,12 @@ async function main() {
     signing: 'ad-hoc',
     signedMachO: signed,
     bundleDigest: bundle.digest,
+    contentDigest: content.digest,
     artifact: { file: path.basename(dmg), bytes: statSync(dmg).size, sha256: await sha256(dmg) },
   };
   writeFileSync(path.join(dist, `${name}.build.json`), JSON.stringify(info, null, 2) + '\n');
   writeFileSync(path.join(dist, `${name}.bundle-manifest.txt`), bundle.manifest);
+  writeFileSync(path.join(dist, `${name}.content-manifest.txt`), content.manifest);
   writeFileSync(path.join(dist, 'SHA256SUMS'), `${info.artifact.sha256}  ${info.artifact.file}\n`);
   if (dirty)
     console.warn(
