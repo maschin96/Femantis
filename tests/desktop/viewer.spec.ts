@@ -6,6 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 import { backendStartup, chromiumArgs } from './startup';
+import { clickFreeAreaCentre } from './viewport';
 import path from 'node:path';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -154,7 +155,7 @@ test('Import, Sichtbarkeit und Flächenauswahl mit Original-ID', async () => {
   await expect(page.getByRole('button', { name: 'Basis einblenden', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Basis einblenden', exact: true }).click();
   await page.getByRole('button', { name: 'Vorn', exact: true }).click();
-  await page.locator('.viewport canvas').click();
+  await clickFreeAreaCentre(page);
   await expect(page.locator('.selection-name')).toHaveText(/^Elementindex \d+$/);
   await application.evaluate(
     ({ dialog }, file) => {
@@ -164,7 +165,7 @@ test('Import, Sichtbarkeit und Flächenauswahl mit Original-ID', async () => {
   );
   await page.getByRole('button', { name: 'Netz öffnen', exact: true }).click();
   await page.getByRole('button', { name: 'Vorn', exact: true }).click();
-  await page.locator('.viewport canvas').click();
+  await clickFreeAreaCentre(page);
   await expect(page.locator('.selection-name')).toHaveText(/^Element \d+$/);
   const externalId = BigInt((await page.locator('.selection-name').textContent())!.split(' ')[1]);
   const internalIndex = Number(

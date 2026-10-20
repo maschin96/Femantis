@@ -74,17 +74,10 @@ test('das Menüband lässt sich einklappen und wieder ausklappen', async () => {
 
 test('die 3D-Ansicht füllt das Fenster; Panels schweben darüber', async () => {
   await page.getByRole('button', { name: /01 Netz/ }).click();
+  // The canvas spans the whole app; the app may exceed a small screen (min-height 680px).
   const canvas = (await page.locator('.viewport canvas').boundingBox())!;
-  const window =
-    page.viewportSize() ??
-    (await page.evaluate(() => ({
-      width: innerWidth,
-      height: innerHeight,
-    })));
-  expect(canvas.x).toBe(0);
-  expect(canvas.y).toBe(0);
-  expect(canvas.width).toBeCloseTo(window.width, 0);
-  expect(canvas.height).toBeCloseTo(window.height, 0);
+  const shell = (await page.locator('.app').boundingBox())!;
+  expect(canvas).toEqual(shell);
   const sidebar = (await page.getByRole('complementary', { name: 'Projekt' }).boundingBox())!;
   const inspector = (await page
     .getByRole('complementary', { name: 'Eigenschaften' })
