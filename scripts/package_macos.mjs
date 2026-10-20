@@ -215,7 +215,7 @@ function stageBackendAndExamples() {
 }
 
 /** Collect license texts of everything shipped; fail if a bundled component has none. */
-async function stageLicenses(sitePackages, packages, asarModules) {
+async function stageLicenses(sitePackages, packages, asarModules, bundleParent) {
   step('Lizenzen und Hinweise sammeln');
   const target = path.join(staging, 'licenses');
   const missing = [];
@@ -269,11 +269,14 @@ async function stageLicenses(sitePackages, packages, asarModules) {
     rows.push([name, version, license.slice(0, 80), `python/${name}/`]);
   }
 
-  // Electron and the Node modules inside app.asar.
-  const electron = path.join(root, 'node_modules/electron');
-  const electronVersion = JSON.parse(readFileSync(path.join(electron, 'package.json'))).version;
+  // Electron and the Node modules inside app.asar. The license texts come from the
+  // Electron distribution the packager bundled (written next to the .app), not from
+  // node_modules/electron/dist, which Electron only downloads on first start.
+  const electronVersion = JSON.parse(
+    readFileSync(path.join(root, 'node_modules/electron/package.json'), 'utf8'),
+  ).version;
   for (const name of ['LICENSE', 'LICENSES.chromium.html'])
-    copy(path.join(electron, 'dist', name), path.join(target, 'electron', name));
+    copy(path.join(bundleParent, name), path.join(target, 'electron', name));
   rows.push(['Electron (inkl. Chromium, Node.js)', electronVersion, 'MIT u. a.', 'electron/']);
   for (const name of asarModules) {
     const directory = path.join(root, 'node_modules', name);
@@ -457,7 +460,7 @@ async function main() {
   });
   const app = path.join(bundleParent, 'Femantis.app');
   const resources = path.join(app, 'Contents/Resources');
-  const licenses = await stageLicenses(sitePackages, packages, asarModules);
+  const licenses = await stageLicenses(sitePackages, packages, asarModules, bundleParent);
   // ditto keeps the runtime's relative symlinks; packager's extraResource rewrites them
   // to absolute paths into the staging folder, which break on every other machine.
   for (const name of ['python', 'backend', 'examples', 'licenses'])
