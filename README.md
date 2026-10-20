@@ -69,9 +69,11 @@ npm run test:backend
 npm run build
 npm run test:desktop
 npm run benchmark
+npm run benchmark:meshes
+npm run benchmark:viewer
 ```
 
-`test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS.
+`test:backend` verwendet die lokale macOS/Linux-Python-Umgebung; auf Windows entsprechend `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` ausführen. Desktoptests starten ein echtes Electron-Fenster und automatisieren native Dateidialogantworten. `benchmark` misst ausschließlich Python-Topologie und Binärpuffer, keine interaktiven FPS. `benchmark:meshes` erzeugt 100k-/1M-Tet4-Messnetze unter `.cache/viewer-benchmark`; `benchmark:viewer` misst damit in einem echten Electron-/WebGL-Fenster Ladezeit, FPS, Picking, Speicher und Ansichtswechsel (`FEMANTIS_BENCH_CASES`, `FEMANTIS_BENCH_LABEL`). Ergebnisse und Grenzen: [Issue-#8-Nachweis](Doc/ISSUE_8_VERIFICATION.md).
 
 Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 

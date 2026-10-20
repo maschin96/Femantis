@@ -1,10 +1,23 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { MeshPacket, ViewState } from '../../shared/types';
-import { selectedTriangles, visibleTriangles } from './geometry';
+import { buildDisplay, cellPalette } from './display';
 import type { ResultField } from '../../shared/types';
 import { scalarValues, fieldLimits, gpuFieldValues } from './fields';
 import { OrientationGizmo } from './OrientationGizmo';
+
+/**
+ * User Timing entries (`femantis:*`) for the viewer benchmark (#8). Only user actions
+ * are measured, never single frames, so the timeline grows with interaction only.
+ */
+function measured<T>(name: string, action: () => T): T {
+  const start = performance.now();
+  try {
+    return action();
+  } finally {
+    performance.measure(`femantis:${name}`, { start, end: performance.now() });
+  }
+}
 
 export class Viewport {
   private renderer: THREE.WebGLRenderer;
@@ -46,7 +59,9 @@ export class Viewport {
   private origin = new THREE.Vector3();
   private extent = 1;
   private radius = 1;
-  private rendered: number[] = [];
+  private rendered: Uint32Array = new Uint32Array(0);
+  private displayIndex: Int32Array = new Int32Array(0);
+  private palette: Float32Array;
   private selected: number | null = null;
   private view: ViewState;
   private pointerStart = { x: 0, y: 0 };
@@ -72,6 +87,7 @@ export class Viewport {
   ) {
     this.view = view;
     this.standardMaterial = this.surface.material;
+    this.palette = cellPalette(mesh);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setClearColor(0xf4f7f8);
@@ -161,9 +177,11 @@ export class Viewport {
       ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
       (-(event.clientY - bounds.top) / bounds.height) * 2 + 1,
     );
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(pointer, this.camera);
-    const hit = ray.intersectObject(this.surface)[0];
+    const hit = measured('pick', () => {
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera(pointer, this.camera);
+      return ray.intersectObject(this.surface)[0];
+    });
     this.onPick(hit?.faceIndex != null ? this.rendered[hit.faceIndex] : null);
   };
   private vertex(index: number): number[] {
@@ -188,83 +206,76 @@ export class Viewport {
   }
 
   setView(view: ViewState): void {
+    measured('setView', () => this.buildView(view));
+  }
+
+  private buildView(view: ViewState): void {
     this.view = view;
-    this.rendered = visibleTriangles(this.mesh, view).filter(
-      (triangle) =>
-        !this.resultValues ||
-        (this.resultField?.association === 'cell'
-          ? Number.isFinite(this.resultValues[this.mesh.triangleOwners[triangle]])
-          : [0, 1, 2].every((local) =>
-              Number.isFinite(this.resultValues![this.mesh.triangles[triangle * 3 + local]]),
-            )),
-    );
-    const selected = selectedTriangles(this.mesh, view.selectedGroup);
-    const coordinates = new Float32Array(this.rendered.length * 9);
-    const colors = new Float32Array(coordinates.length);
-    const femValues = new Float32Array(this.rendered.length * 3);
-    const palette = [0x548b95, 0x8abeb2, 0x729bbd, 0xb7c4a1];
-    const cellColors = new Map<number, number>();
-    this.mesh.groups
-      .filter((group) => group.kind === 'volume')
-      .forEach((group, index) =>
-        group.members.forEach((cell) => {
-          if (!cellColors.has(cell)) cellColors.set(cell, palette[index % palette.length]);
-        }),
-      );
-    const color = new THREE.Color();
-    const edgeCoordinates: number[] = [];
-    const edges = new Set<string>();
-    const visibleNodes = new Set<number>();
-    this.rendered.forEach((triangle, displayIndex) => {
-      color.setHex(
-        selected.has(triangle)
-          ? 0x2ecc71
-          : (cellColors.get(this.mesh.triangleOwners[triangle]) ?? 0x6798a2),
-      );
-      for (let local = 0; local < 3; local++) {
-        const node = this.mesh.triangles[triangle * 3 + local];
-        visibleNodes.add(node);
-        coordinates.set(this.vertex(node), displayIndex * 9 + local * 3);
-        colors.set(color.toArray(), displayIndex * 9 + local * 3);
-        if (this.gpuValues)
-          femValues[displayIndex * 3 + local] =
-            this.gpuValues[
-              this.resultField?.association === 'cell' ? this.mesh.triangleOwners[triangle] : node
-            ];
-        const next = this.mesh.triangles[triangle * 3 + ((local + 1) % 3)];
-        const key = node < next ? `${node}:${next}` : `${next}:${node}`;
-        if (!edges.has(key)) {
-          edges.add(key);
-          edgeCoordinates.push(...this.vertex(node), ...this.vertex(next));
-        }
-      }
+    const display = buildDisplay({
+      mesh: this.mesh,
+      view,
+      origin: [this.origin.x, this.origin.y, this.origin.z],
+      palette: this.palette,
+      field:
+        this.resultField && this.resultValues && this.gpuValues
+          ? {
+              association: this.resultField.association,
+              values: this.resultValues,
+              gpu: this.gpuValues,
+            }
+          : null,
+      deformation: this.deformation,
+      factor: this.deformationFactor,
     });
+    this.rendered = display.rendered;
+    this.displayIndex = display.displayIndex;
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(coordinates, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('femValue', new THREE.BufferAttribute(femValues, 1));
+    geometry.setAttribute('position', new THREE.BufferAttribute(display.coordinates, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(display.colors, 3));
+    geometry.setAttribute('femValue', new THREE.BufferAttribute(display.femValues, 1));
     geometry.computeVertexNormals();
     this.replaceGeometry(this.surface, geometry);
     const edgeGeometry = new THREE.BufferGeometry();
-    edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgeCoordinates, 3));
+    edgeGeometry.setAttribute('position', new THREE.BufferAttribute(display.edges, 3));
     this.replaceGeometry(this.edges, edgeGeometry);
     const nodeGeometry = new THREE.BufferGeometry();
-    nodeGeometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(
-        [...visibleNodes].flatMap((index) => this.vertex(index)),
-        3,
-      ),
-    );
+    nodeGeometry.setAttribute('position', new THREE.BufferAttribute(display.nodes, 3));
     this.replaceGeometry(this.points, nodeGeometry);
     this.edges.visible = view.mode === 'mesh';
     this.points.visible = view.showNodes;
     this.helpers.visible = view.showAxes;
     this.setSelected(this.selected);
     this.render();
+    performance.mark('femantis:geometry', {
+      detail: {
+        surfaceTriangles: this.rendered.length,
+        edgeSegments: this.edges.geometry.getAttribute('position').count / 2,
+        nodes: this.points.geometry.getAttribute('position').count,
+        gpuBytes: this.gpuBytes(),
+      },
+    });
+  }
+
+  /** Bytes of all vertex attributes uploaded for the mesh, edges, nodes and highlight. */
+  private gpuBytes(): number {
+    let bytes = 0;
+    for (const object of [this.surface, this.edges, this.points, this.highlight])
+      for (const attribute of Object.values(object.geometry.attributes))
+        bytes += (attribute as THREE.BufferAttribute).array.byteLength;
+    return bytes;
   }
 
   setField(
+    field: ResultField | null,
+    component: string,
+    limits: [number, number] | null,
+    displacement: Float64Array | null,
+    factor: number,
+  ): void {
+    measured('setField', () => this.applyField(field, component, limits, displacement, factor));
+  }
+
+  private applyField(
     field: ResultField | null,
     component: string,
     limits: [number, number] | null,
@@ -283,9 +294,14 @@ export class Viewport {
   }
 
   setSelected(triangle: number | null): void {
+    measured('setSelected', () => this.applySelected(triangle));
+  }
+
+  private applySelected(triangle: number | null): void {
     this.selected = triangle;
     const geometry = new THREE.BufferGeometry();
-    if (triangle !== null && this.rendered.includes(triangle)) {
+    const shown = triangle !== null && this.displayIndex[triangle] >= 0;
+    if (shown) {
       geometry.setAttribute(
         'position',
         new THREE.Float32BufferAttribute(
@@ -295,7 +311,7 @@ export class Viewport {
       );
     }
     this.replaceGeometry(this.highlight, geometry);
-    this.highlight.visible = triangle !== null && this.rendered.includes(triangle);
+    this.highlight.visible = shown;
     this.render();
   }
 

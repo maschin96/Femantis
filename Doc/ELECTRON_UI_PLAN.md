@@ -187,7 +187,7 @@ Double-Präzision im Fachmodell behalten; für die GPU um einen lokalen Ursprung
 
 Oberflächen, Kanten und Punkte bündeln statt ein Szenenobjekt pro Element erzeugen. Nach Bedarf rendern, Geometrieaufbereitung auslagern, Knotenlabels auf Auswahl begrenzen, GPU-Ressourcen beim Schließen freigeben. Vereinfachung nur als klar markierte Anzeigeoption; Auswahl und Solver arbeiten mit den Originaldaten.
 
-**Vorläufiges Benchmarkziel, noch kein Nachweis:** Auf einem dokumentierten Referenzgerät ein repräsentatives Netz mit 100.000 Tet4-Zellen anzeigen, bei typischer Drehung mindestens 30 FPS erreichen und die Oberfläche während eines Solverjobs bedienbar halten. Vor Umsetzung mit realen Toolbox-Fällen Speicher, Oberflächenzahl, Ladezeit und Picking messen; bei 1 Million Zellen zunächst Grenzen ermitteln, keine Leistung zusagen.
+**Vorläufiges Benchmarkziel, noch kein Nachweis:** Auf einem dokumentierten Referenzgerät ein repräsentatives Netz mit 100.000 Tet4-Zellen anzeigen, bei typischer Drehung mindestens 30 FPS erreichen und die Oberfläche während eines Solverjobs bedienbar halten. Vor Umsetzung mit realen Toolbox-Fällen Speicher, Oberflächenzahl, Ladezeit und Picking messen; bei 1 Million Zellen zunächst Grenzen ermitteln, keine Leistung zusagen. Messung vom 19.10.2026 (#8): auf Apple M4 erfüllt, Ladezeit durch die Toolbox-Topologie begrenzt; siehe [Nachweis](ISSUE_8_VERIFICATION.md).
 
 ## 9. Geplante Codeorganisation
 

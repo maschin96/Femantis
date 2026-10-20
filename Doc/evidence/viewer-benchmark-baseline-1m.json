@@ -1,0 +1,33 @@
+{
+  "environment": {
+    "label": "baseline-1m",
+    "date": "2026-10-19T17:41:04.447Z",
+    "platform": "Darwin 27.0.0 arm64",
+    "cpu": "Apple M4",
+    "memoryGB": 32,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "electron": "44.7.0",
+    "chrome": "152.0.7977.130",
+    "viewport": [
+      1480,
+      940
+    ],
+    "devicePixelRatio": 2
+  },
+  "block-1m": {
+    "cells": 998976,
+    "points": 176220,
+    "load": {
+      "failedAfterSeconds": 120.35,
+      "message": "19:43:04Der Vorgang dauert zu lange. Bitte Modellgröße und Python-Umgebung prüfen."
+    }
+  },
+  "plate-1m": {
+    "cells": 1008600,
+    "points": 337842,
+    "load": {
+      "failedAfterSeconds": 120.31,
+      "message": "19:45:04Der Vorgang dauert zu lange. Bitte Modellgröße und Python-Umgebung prüfen."
+    }
+  }
+}

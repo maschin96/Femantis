@@ -26,6 +26,7 @@ export function MeshViewer(props: Props) {
     setError(null);
     if (!host.current || !props.mesh) return;
     try {
+      const start = performance.now();
       viewport.current = new Viewport(
         host.current,
         props.mesh,
@@ -33,6 +34,7 @@ export function MeshViewer(props: Props) {
         (value) => latest.current.onPick(value),
         (value) => latest.current.onCamera(value),
       );
+      performance.measure('femantis:createViewport', { start, end: performance.now() });
     } catch (error) {
       setError(
         `Die 3D-Ansicht konnte nicht starten: ${error instanceof Error ? error.message : String(error)}`,

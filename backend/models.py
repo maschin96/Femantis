@@ -127,10 +127,15 @@ def dump_toml(document):
 
 def create_box(lengths, divisions):
     """Structured Tet4 box in metres with six named exterior boundary groups."""
-    import numpy as np
-    from fem_toolbox.mesh import Mesh, inspect_boundary_topology
     if len(lengths) != 3 or len(divisions) != 3 or any(not math.isfinite(v) or v <= 0 for v in lengths) or any(type(v) is not int or v < 1 or v > 40 for v in divisions) or math.prod(divisions)*6 > 30000:
         raise ValueError("Positive Abmessungen, 1–40 Teilungen je Achse und höchstens 30.000 Elemente wählen.")
+    return structured_box(lengths, divisions)
+
+
+def structured_box(lengths, divisions):
+    """Unbounded structured Tet4 box; callers validate sizes (UI limit in create_box)."""
+    import numpy as np
+    from fem_toolbox.mesh import Mesh, inspect_boundary_topology
     nx, ny, nz = divisions
     points = np.array([[x*lengths[0]/nx, y*lengths[1]/ny, z*lengths[2]/nz] for z in range(nz+1) for y in range(ny+1) for x in range(nx+1)])
     def node(x,y,z): return x+(nx+1)*(y+(ny+1)*z)
