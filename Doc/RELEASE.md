@@ -16,7 +16,7 @@ Intel-/Universal-Builds und automatische Updates sind nicht Teil dieses Vertrags
 | Laufzeitpfade | `src/main/runtime.ts`: Paket liest Python, Adapter und Beispiele aus `Contents/Resources`, Laufcache unter `~/Library/Application Support/Femantis/runs` | Signiertes Bundle bleibt schreibgeschützt |
 | Python-Isolation | Gebündeltes Python startet mit `-E -s -B`; Bytecode wird beim Paketieren hashbasiert (`unchecked-hash`) vorkompiliert | Keine `PYTHON*`-Variablen, keine Benutzer-Site-Packages, keine Schreibzugriffe ins Bundle |
 | Symbol | `build/icon.svg` → `build/icon.icns` (`npm run icon`) | Eigene Gestaltung |
-| Lizenzen | Werden beim Paketieren gesammelt (CPython und gelinkte Bibliotheken, jede Python-Distribution, Electron/Chromium, jedes Modul in `app.asar`, Toolbox-Beispielnetz); fehlende Texte brechen den Build ab | `Contents/Resources/licenses/README.md` und Ordner `Lizenzen` im DMG |
+| Lizenzen | Femantis selbst: GPL-3.0-or-later. Drittlizenzen werden beim Paketieren gesammelt (CPython und gelinkte Bibliotheken, jede Python-Distribution, Electron/Chromium, jedes Modul in `app.asar`, Toolbox-Beispielnetz); fehlende Texte brechen den Build ab | `Contents/Resources/licenses/README.md` und Ordner `Lizenzen` im DMG |
 
 Das Paketierungsskript bricht außerdem ab, wenn ein Symlink aus dem Bundle zeigt,
 eine gebündelte Mach-O-Datei Bibliotheken außerhalb von `/usr/lib`, `/System` oder
@@ -65,31 +65,37 @@ initialisieren; nur dieser Modus startet deshalb mit `--no-sandbox`.
 Reproduzierbarkeit bedeutet hier: gleiche gepinnte Eingaben ergeben ein Bundle mit
 gleichem `bundleDigest`. Das DMG selbst enthält Zeitstempel und ist nicht bitgleich.
 
+## Lizenz
+
+Femantis Desktop steht seit dem 20.10.2026 unter der **GNU General Public License,
+Version 3 oder (nach Wahl) jeder späteren Version** (SPDX `GPL-3.0-or-later`,
+[LICENSE](../LICENSE), Entscheidung des Repository-Eigentümers). Alle gebündelten
+Drittkomponenten stehen unter GPL-3.0-kompatiblen Lizenzen (MIT, BSD, ISC, PSF,
+Zlib u. a.; Einzelheiten im Lizenzordner des Pakets). Das Paket enthält den
+Lizenztext unter `licenses/femantis/LICENSE`. Weil das DMG nur Objektcode enthält,
+verweist jede Veröffentlichung auf den Quelltext des zugehörigen Tags (GPL-3.0 § 6).
+
 ## Signierung, Notarisierung und Gatekeeper
 
-Aktueller Stand: **nur Ad-hoc-Signatur** (`codesign --sign -`). Jede gebündelte
-Mach-O-Datei wird einzeln, das Bundle anschließend vollständig signiert und mit
+Entscheidung vom 20.10.2026: **Developer-ID-Signierung und Notarisierung sind
+zurückgestellt.** Releases werden bis auf Weiteres nur ad hoc signiert
+(`codesign --sign -`). Diese Signatur bleibt erforderlich, weil macOS auf Apple
+Silicon unsignierte ausführbare Dateien nicht startet. Jede gebündelte Mach-O-Datei
+wird einzeln, das Bundle anschließend vollständig signiert und mit
 `codesign --verify --deep --strict` geprüft. Eine Ad-hoc-Signatur belegt Integrität
-gegenüber nachträglicher Veränderung, aber keine Herkunft.
+gegenüber nachträglicher Veränderung, aber keine Herkunft; die Herkunft belegen
+`SHA256SUMS` und `build.json` am GitHub-Release.
 
-Ein aus dem Internet geladenes ad-hoc-signiertes DMG blockiert Gatekeeper. Für interne
-Tests: App öffnen, Meldung schließen, unter **Systemeinstellungen → Datenschutz &
-Sicherheit** „Dennoch öffnen“ wählen. Ein solches Paket ist kein Release.
+Folge für Nutzer: Ein aus dem Internet geladenes, nicht notarisiertes DMG blockiert
+Gatekeeper beim ersten Start. App in „Programme“ kopieren, öffnen, Meldung schließen,
+dann unter **Systemeinstellungen → Datenschutz & Sicherheit** „Dennoch öffnen“ wählen.
+Die Releasenotizen müssen diesen Schritt und die Prüfsumme nennen.
 
-Benannte Blocker für einen veröffentlichungsfähigen Freigabeweg:
-
-1. **Keine Developer-ID.** `security find-identity -v -p codesigning` meldete am
-   20.10.2026 „0 valid identities found“. Benötigt wird ein Apple-Developer-Konto mit
-   „Developer ID Application“-Zertifikat.
-2. **Keine Notarisierungszugangsdaten.** `xcrun notarytool` ist vorhanden, aber ohne
-   App Store Connect API-Schlüssel oder Apple-ID-Profil nicht nutzbar.
-3. **Signaturweg für Developer ID nicht implementiert.** Erforderlich sind Hardened
-   Runtime, sichere Zeitstempel, Electron-Entitlements und eine geprüfte Liste der
-   für das gebündelte Python nötigen Entitlements. Ohne Zertifikat ist dieser Weg nicht
-   prüfbar und deshalb bewusst nicht als Code hinterlegt.
-4. **Keine Lizenz für Femantis selbst.** Das Repository enthält keine Lizenzdatei für
-   den eigenen Code. Eine Weitergabe an Dritte setzt eine Entscheidung des Eigentümers
-   voraus.
+Für eine spätere Developer-ID-Freigabe fehlen weiterhin: ein „Developer ID
+Application“-Zertifikat (`security find-identity -v -p codesigning` meldete am
+20.10.2026 „0 valid identities found“), Notarisierungszugangsdaten für
+`xcrun notarytool` sowie ein implementierter und geprüfter Signaturweg mit Hardened
+Runtime, sicheren Zeitstempeln und Entitlements für Electron und das gebündelte Python.
 
 Offene Härtung: Electron-Fuses (u. a. `RunAsNode`, `EnableNodeCliInspectArguments`
 aus, ASAR-Integrität an) sind nicht gesetzt. Sie würden die Playwright-Steuerung des
@@ -120,13 +126,13 @@ mit Nachweis erledigt sind.
 - [ ] Annotierter Tag `v<version>` auf genau dem geprüften `main`-Commit.
 - [ ] Paket aus dem Tag neu gebaut; `bundleDigest` stimmt mit Gate 1 überein.
 
-### 4. Veröffentlichung (derzeit blockiert)
+### 4. Veröffentlichung
 
-- [ ] Blocker 1–4 oben gelöst.
-- [ ] Developer-ID-Signatur, Notarisierung und Stapling ausgeführt;
-      `spctl --assess --type execute` und `xcrun stapler validate` erfolgreich.
-- [ ] Artefakt auf einem zweiten, sauberen Mac aus dem Download heraus geöffnet;
-      Rechnen, Speichern und Wiederöffnen manuell bestätigt.
-- [ ] GitHub-Release mit DMG, `SHA256SUMS` und `build.json`; Prüfsumme nach dem
-      Hochladen erneut gegen den Download verglichen.
+- [ ] Artefakt auf einem zweiten, sauberen Mac aus dem Download heraus geöffnet
+      (einschließlich Gatekeeper-Freigabe); Rechnen, Speichern und Wiederöffnen
+      manuell bestätigt.
+- [ ] GitHub-Release zum Tag mit DMG, `SHA256SUMS` und `build.json`; Releasenotizen
+      nennen GPL-3.0-or-later, den Quelltext des Tags, die fehlende Notarisierung mit
+      Gatekeeper-Anleitung und die Prüfsumme.
+- [ ] Prüfsumme nach dem Hochladen erneut gegen den Download verglichen.
 - [ ] Erst danach wird die Veröffentlichung als erfolgt gemeldet.

@@ -2,7 +2,7 @@
 
 Bezug: [Issue #10](https://github.com/maschin96/Femantis/issues/10), Branch
 `codex/10-macos-packaging`, Basis `6c60ac3` (`main`), 20.10.2026. Paketierung,
-Signaturstand, Blocker und Releasecheckliste: [RELEASE.md](RELEASE.md).
+Lizenz, Signaturentscheidung und Releasecheckliste: [RELEASE.md](RELEASE.md).
 
 Umgebung: MacBook Pro, Apple Silicon (arm64), macOS 27.0.1, Xcode 26.5, Node.js
 25.8.2, npm 11.11.1, Playwright 1.64.0, Electron 44.7.0. Das Repository liegt in einem
@@ -16,8 +16,8 @@ Signaturfehler auf.
 | Reproduzierbares Paket mit festgelegter Toolbox und Python ohne Entwicklercheckout erzeugbar | erfüllt (lokal) | `npm run package:mac`: CPython 3.13.16 (python-build-standalone `20261003`, SHA-256 gegen Release-Digest und `SHA256SUMS` geprüft), Toolbox 1.4.0 vom gepinnten Commit, Pakete nach `backend/constraints.txt` (`--check-constraints` im Build). Zwei aufeinanderfolgende Builds: identischer `bundleDigest` `23a12a7f6a53bcb7ff20b0b4986de5f6c723dbcac9f22e249338133e0517a6a8` über 6661 Pfade. Das DMG ist wegen Zeitstempeln nicht bitgleich. Die App braucht weder Checkout noch `.venv`. |
 | Backend/Beispiele aus Ressourcenpfaden; Cache/Benutzerdaten außerhalb schreibgeschützter Ressourcen | erfüllt | `src/main/runtime.ts` mit 6 Vitest-Fällen; Paket: `Contents/Resources/{python,backend,examples}`, Laufcache `~/Library/Application Support/Femantis/runs`. Python startet mit `-E -s -B`; ein Test belegt, dass der echte Adapter so rechnet, ohne Bytecode neben den Adapter zu schreiben. Nach jedem Paket-Smoke-Test besteht `codesign --verify --deep --strict` am benutzten Bundle (keine Schreibzugriffe ins Bundle). |
 | Sauberes Zielsystem ohne Node, gh und Entwicklungs-.venv: offline importieren, rechnen, speichern, wieder öffnen | teilweise | Lokal simuliert, kein zweiter Mac: DMG eingehängt, App außerhalb des Repos kopiert, frisches `HOME`, eigener Benutzerdatenordner, `PATH=/usr/bin:/bin:/usr/sbin:/sbin`, keine `FEMANTIS_*`. Mit `FEMANTIS_PACKAGE_SANDBOX=1` zusätzlich Seatbelt: Netz nur Loopback, kein Lesezugriff auf Repository, Homebrew und python.org-Framework (Negativkontrollen: `curl` per Name und IP scheitert, `cat` im Repo und Start des python.org-Pythons verweigert). Gebündelte Mach-O-Dateien linken nur `/usr/lib`, `/System` und das Bundle (Build-Guard). Ein echter Zweitrechner und der neue CI-Job stehen aus. |
-| Lizenzen/Notices gebündelt; Anwendungssymbol | erfüllt für Drittkomponenten | `Contents/Resources/licenses/` und `Lizenzen/` im DMG: CPython plus gelinkte Bibliotheken (aus dem vollständigen Archiv desselben Builds, SHA-256 gepinnt), alle 8 Python-Distributionen, Electron/Chromium, alle 6 Module in `app.asar`, Toolbox-Beispielnetz. Ein fehlender Text bricht den Build ab. Symbol: `build/icon.svg` → `build/icon.icns`. **Für Femantis selbst gibt es keine Lizenzdatei** (Blocker 4 in RELEASE.md). |
-| Signierung/Notarisierung und Artefaktintegrität: geprüfter Weg oder benannte Blocker | Blocker benannt | Ad-hoc-Signatur aller 138 gebündelten Mach-O-Dateien und des Bundles, im Build und im eingehängten DMG verifiziert; `SHA256SUMS` und `build.json`. Keine Developer-ID (`security find-identity` → 0 Identitäten), keine Notarisierungszugangsdaten, Developer-ID-Weg ohne Zertifikat nicht prüfbar. |
+| Lizenzen/Notices gebündelt; Anwendungssymbol | erfüllt | Femantis selbst: GPL-3.0-or-later (`LICENSE`, unveränderter GPLv3-Text von gnu.org, SHA-256 `3972dc97…6986`; Entscheidung des Eigentümers vom 20.10.2026), im Paket unter `licenses/femantis/`. `Contents/Resources/licenses/` und `Lizenzen/` im DMG: CPython plus gelinkte Bibliotheken (aus dem vollständigen Archiv desselben Builds, SHA-256 gepinnt), alle 8 Python-Distributionen, Electron/Chromium, alle 6 Module in `app.asar`, Toolbox-Beispielnetz. Ein fehlender Text bricht den Build ab. Symbol: `build/icon.svg` → `build/icon.icns`. Alle Drittlizenzen sind GPL-3.0-kompatibel. |
+| Signierung/Notarisierung und Artefaktintegrität: geprüfter Weg oder benannte Blocker | erfüllt (Developer ID zurückgestellt) | Entscheidung des Eigentümers vom 20.10.2026: Developer-ID-Signierung und Notarisierung zurückgestellt; Gatekeeper-Freigabe ist in README und RELEASE.md beschrieben. Ad-hoc-Signatur aller 138 gebündelten Mach-O-Dateien und des Bundles, im Build und im eingehängten DMG verifiziert; `SHA256SUMS` und `build.json`. Für später fehlen Developer-ID (`security find-identity` → 0 Identitäten), Notarisierungszugangsdaten und ein geprüfter Developer-ID-Signaturweg. |
 | Releasecheckliste trennt Build, Integration, Tag, Veröffentlichung | erfüllt | [RELEASE.md](RELEASE.md), Gates 1–4. |
 
 ## Befunde während der Umsetzung
@@ -54,11 +54,12 @@ Signaturfehler auf.
 
 ## Nicht abgedeckt
 
-Developer-ID-Signierung, Notarisierung, Gatekeeper-Prüfung eines heruntergeladenen
+Developer-ID-Signierung und Notarisierung (zurückgestellt), Gatekeeper-Prüfung eines heruntergeladenen
 Artefakts, ein zweiter sauberer Mac, Electron-Fuses, Intel/Universal,
 Windows/Linux ([#11](https://github.com/maschin96/Femantis/issues/11)) und
 automatische Updates.
 
 Status: lokale Übergabe mit Verifikationslücken. Bau, Pfade, Offline-Betrieb,
-Lizenzen und Checkliste sind lokal belegt. Signierung/Notarisierung, Eigenlizenz,
-Zweitrechner und CI-Lauf sind offen. Kein Release.
+Lizenzen einschließlich GPL-3.0-or-later und Checkliste sind lokal belegt.
+Zweitrechner und CI-Lauf sind offen; Developer-ID/Notarisierung bewusst zurückgestellt.
+Kein Release veröffentlicht.

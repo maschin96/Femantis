@@ -30,7 +30,7 @@ npm run package:mac
 npm run test:package
 ```
 
-`package:mac` erzeugt `dist/Femantis-<version>-mac-arm64.dmg` mit gebündeltem CPython 3.13.16 und FEM-Toolbox 1.4.0 sowie Build-Manifest und `SHA256SUMS`. Die App benötigt auf dem Zielrechner weder Node.js noch Python oder Internetzugang. Sie ist nur ad hoc signiert, nicht notarisiert, und deshalb kein veröffentlichungsfähiges Release. Paketierungsentscheidung, Smoke-Tests, Blocker und Releasecheckliste: [Auslieferung](Doc/RELEASE.md).
+`package:mac` erzeugt `dist/Femantis-<version>-mac-arm64.dmg` mit gebündeltem CPython 3.13.16 und FEM-Toolbox 1.4.0 sowie Build-Manifest und `SHA256SUMS`. Die App benötigt auf dem Zielrechner weder Node.js noch Python oder Internetzugang. Developer-ID-Signierung und Notarisierung sind bewusst zurückgestellt: Die App ist nur ad hoc signiert, und Gatekeeper verlangt beim ersten Start eine Freigabe unter **Systemeinstellungen → Datenschutz & Sicherheit**. Paketierungsentscheidung, Smoke-Tests und Releasecheckliste: [Auslieferung](Doc/RELEASE.md).
 
 ## Verfügbare Bedienung
 
@@ -95,4 +95,8 @@ Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 - [Auslieferung und Releasecheckliste](Doc/RELEASE.md)
 - [Beispielnetze und Herkunft](examples/README.md)
 
-Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Ein ad-hoc-signiertes macOS/Apple-Silicon-Paket mit gebündelter Python-Runtime ist lokal und offline geprüft ([#10](https://github.com/maschin96/Femantis/issues/10)); Developer-ID-Signierung und Notarisierung fehlen. Windows/Linux sind noch keine geprüften Auslieferungsziele.
+Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Ein ad-hoc-signiertes macOS/Apple-Silicon-Paket mit gebündelter Python-Runtime ist lokal und offline geprüft ([#10](https://github.com/maschin96/Femantis/issues/10)); Developer-ID-Signierung und Notarisierung sind zurückgestellt. Windows/Linux sind noch keine geprüften Auslieferungsziele.
+
+## Lizenz
+
+Femantis Desktop ist freie Software unter der [GNU General Public License, Version 3 oder später](LICENSE) (`GPL-3.0-or-later`). Die FEM-Toolbox und die übrigen Abhängigkeiten behalten ihre eigenen, GPL-kompatiblen Lizenzen; das macOS-Paket bündelt alle Lizenztexte.

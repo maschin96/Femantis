@@ -225,6 +225,10 @@ async function stageLicenses(sitePackages, packages, asarModules) {
     cpSync(from, to);
   };
 
+  // Femantis itself.
+  copy(path.join(root, 'LICENSE'), path.join(target, 'femantis/LICENSE'));
+  rows.push(['Femantis Desktop', pkg.version, String(pkg.license), 'femantis/']);
+
   // Python runtime and its statically linked native libraries.
   const full = await pinnedDownload(RUNTIME_LICENSES);
   const extracted = path.join(work, 'runtime-licenses');
@@ -291,7 +295,10 @@ async function stageLicenses(sitePackages, packages, asarModules) {
   const table = rows.map((row) => `| ${row.join(' | ')} |`).join('\n');
   writeFileSync(
     path.join(target, 'README.md'),
-    `# Femantis Desktop ${pkg.version} – Drittanbieterkomponenten\n\n` +
+    `# Femantis Desktop ${pkg.version} – Lizenzen\n\n` +
+      'Femantis Desktop ist freie Software unter der GNU General Public License, Version 3\n' +
+      'oder (nach Ihrer Wahl) jeder späteren Version (`femantis/LICENSE`). Der Quelltext steht\n' +
+      'unter https://github.com/maschin96/Femantis bereit.\n\n' +
       'Dieses Paket enthält die folgenden Komponenten. Die Lizenztexte liegen in den genannten\n' +
       'Unterordnern. `python-runtime/` stammt aus dem vollständigen Archiv desselben\n' +
       'python-build-standalone-Builds und deckt auch dort nicht verwendete Plattformbibliotheken ab.\n' +
@@ -428,7 +435,7 @@ async function main() {
     arch: 'arm64',
     appBundleId: BUNDLE_ID,
     appCategoryType: 'public.app-category.productivity',
-    appCopyright: 'Femantis Desktop',
+    appCopyright: 'Femantis Desktop · GPL-3.0-or-later',
     icon: path.join(root, 'build/icon.icns'),
     asar: true,
     prune: true,
