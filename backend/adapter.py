@@ -192,6 +192,9 @@ def handle_request(request):
 
 def main():
     request = {}
+    # The protocol is UTF-8 on every platform; Windows would otherwise use its code page.
+    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     try:
         request = json.loads(sys.stdin.readline())
         if not isinstance(request, dict):

@@ -1,0 +1,35 @@
+"physics" = "heat"
+"schema_version" = 1
+"units" = "SI"
+
+["boundary"]
+
+[["boundary"."dirichlet"]]
+"field" = "T"
+"set" = "Einspannung"
+"unit" = "K"
+"value" = 300
+
+[["boundary"."dirichlet"]]
+"field" = "T"
+"set" = "Stirnflaeche"
+"unit" = "K"
+"value" = 350
+
+["materials"]
+
+["materials"."T"]
+
+["materials"."T"."Wärmeleiter-Ü"]
+"conductivity" = 2
+"unit" = "W/(m K)"
+
+["mesh"]
+"length_scale_to_m" = 1
+"path" = "mesh.msh"
+
+["regions"]
+
+["regions"."T"]
+"Basis" = "Wärmeleiter-Ü"
+"Spitze" = "Wärmeleiter-Ü"

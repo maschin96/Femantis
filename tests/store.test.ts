@@ -37,7 +37,11 @@ describe('Portable Projektspeicherung', () => {
   it('verhindert Schreiben durch einen Netzordner-Symlink außerhalb des Projekts', async () => {
     const root = await folder();
     const outside = await folder();
-    await symlink(outside, path.join(root, 'probe.femantis.files'), 'dir');
+    await symlink(
+      outside,
+      path.join(root, 'probe.femantis.files'),
+      process.platform === 'win32' ? 'junction' : 'dir',
+    );
     await expect(
       saveProjectFile(
         path.join(root, 'probe.femantis.json'),

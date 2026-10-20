@@ -39,7 +39,7 @@ def main(names):
     folder = ROOT / ".cache/viewer-benchmark"
     folder.mkdir(parents=True, exist_ok=True)
     summary = folder / "meshes.json"
-    report = json.loads(summary.read_text()) if summary.exists() else {}
+    report = json.loads(summary.read_text(encoding="utf-8")) if summary.exists() else {}
     for name in names or CASES:
         lengths, divisions = CASES[name]
         start = time.perf_counter()
@@ -49,7 +49,7 @@ def main(names):
                         "lengths_m": lengths, "divisions": divisions,
                         "seconds": round(time.perf_counter() - start, 2)}
         print(name, report[name], flush=True)
-    summary.write_text(json.dumps(report, indent=2) + "\n")
+    summary.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

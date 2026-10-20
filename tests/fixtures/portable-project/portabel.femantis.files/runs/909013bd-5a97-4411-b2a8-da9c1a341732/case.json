@@ -1,0 +1,39 @@
+{
+  "boundary": {
+    "dirichlet": [
+      {
+        "field": "T",
+        "set": "Einspannung",
+        "unit": "K",
+        "value": 300
+      },
+      {
+        "field": "T",
+        "set": "Stirnflaeche",
+        "unit": "K",
+        "value": 350
+      }
+    ]
+  },
+  "materials": {
+    "T": {
+      "W\u00e4rmeleiter-\u00dc": {
+        "conductivity": 2,
+        "unit": "W/(m K)"
+      }
+    }
+  },
+  "mesh": {
+    "length_scale_to_m": 1,
+    "path": "mesh.msh"
+  },
+  "physics": "heat",
+  "regions": {
+    "T": {
+      "Basis": "W\u00e4rmeleiter-\u00dc",
+      "Spitze": "W\u00e4rmeleiter-\u00dc"
+    }
+  },
+  "schema_version": 1,
+  "units": "SI"
+}
