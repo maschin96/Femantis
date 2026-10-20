@@ -13,6 +13,9 @@ import {
 } from '../src/main/project-store';
 import { canonicalModel, newModel } from '../src/shared/model';
 import { defaultView, type ModelDocument, type ResultPacket } from '../src/shared/types';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 let root: string;
 let source: MeshSource;
@@ -23,7 +26,7 @@ const projects: string[] = [];
 beforeAll(async () => {
   root = await mkdtemp(path.join(tmpdir(), 'femantis-provenance-runs-'));
   source = { name: 'cantilever.msh', scale: 1, bytes: await readFile('examples/cantilever.msh') };
-  const mesh = await importMesh(process.cwd(), source.bytes, source.name, source.scale);
+  const mesh = await importMesh(backend, source.bytes, source.name, source.scale);
   model = newModel(mesh);
   model.boundary = {
     dirichlet: [
@@ -36,7 +39,7 @@ beforeAll(async () => {
   await mkdir(first);
   await mkdir(other);
   const id = randomUUID();
-  const result = await calculateModel(process.cwd(), source, model, id, first);
+  const result = await calculateModel(backend, source, model, id, first);
   run = {
     id,
     directory: first,
@@ -46,7 +49,7 @@ beforeAll(async () => {
   } as RunFiles;
   const next = structuredClone(model);
   next.boundary!.dirichlet[1].value = 400;
-  await calculateModel(process.cwd(), source, next, randomUUID(), other);
+  await calculateModel(backend, source, next, randomUUID(), other);
 });
 afterEach(async () => {
   for (const folder of projects.splice(0)) await rm(folder, { recursive: true, force: true });
@@ -106,7 +109,7 @@ describe('Bindung an den tatsächlich gerechneten Eingabesnapshot', () => {
     expect(opened.model).toEqual(draft);
     expect(opened.run!.modelKey).toBe(canonicalModel(model));
     const loaded = await loadCalculation(
-      process.cwd(),
+      backend,
       opened.run!.directory,
       run.id,
       opened.run!.modelKey,
@@ -130,7 +133,7 @@ describe('Bindung an den tatsächlich gerechneten Eingabesnapshot', () => {
     await rm(path.join(saved.directory, 'model.json'));
     const opened = await openProjectFile(saved.filename);
     const loaded = await loadCalculation(
-      process.cwd(),
+      backend,
       opened.run!.directory,
       run.id,
       opened.run!.modelKey,

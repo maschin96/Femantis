@@ -4,6 +4,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { importMesh, loadCalculation } from '../src/main/backend';
 import { openProjectFile } from '../src/main/project-store';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 /**
  * tests/fixtures/portable-project was saved on macOS/Apple Silicon on 20.10.2026 with a real
@@ -25,7 +28,7 @@ describe('Projektweitergabe zwischen Plattformen', () => {
       expect(project.runs).toHaveLength(1);
       const run = project.runs[0];
       const result = await loadCalculation(
-        process.cwd(),
+        backend,
         run.directory,
         run.id,
         run.modelKey,
@@ -33,7 +36,7 @@ describe('Projektweitergabe zwischen Plattformen', () => {
         run.provenanceSha256,
       );
       expect(result.provenanceVerified).toBe(true);
-      const mesh = await importMesh(process.cwd(), project.source.bytes, project.source.name, 1);
+      const mesh = await importMesh(backend, project.source.bytes, project.source.name, 1);
       const temperature = result.fields.find((field) => field.id === 'temperature_K')!;
       for (let node = 0; node < mesh.pointCount; node++)
         expect(temperature.values[node]).toBeCloseTo(

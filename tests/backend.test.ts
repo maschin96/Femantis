@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { readFile } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { backendStatus, importMesh, importTimeout } from '../src/main/backend';
+import { backendStatus, importMesh, importTimeout, requestBackend } from '../src/main/backend';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 describe('Echter Python-Prozess', () => {
   it('meldet die installierte Toolbox und überträgt Tet10 samt überlappenden Gruppen', async () => {
-    expect(await backendStatus(process.cwd())).toMatchObject({
+    expect(await backendStatus(backend)).toMatchObject({
       available: true,
       toolboxVersion: '1.4.0',
     });
     const mesh = await importMesh(
-      process.cwd(),
+      backend,
       await readFile('examples/tet10-groups.msh'),
       'tet10.msh',
       1,
@@ -18,12 +22,7 @@ describe('Echter Python-Prozess', () => {
     expect(mesh.triangleCount).toBe(16);
     expect(mesh.triangleFaceNodes).toBeInstanceOf(Uint32Array);
     expect(mesh.triangleFaceNodes!.length).toBe(16 * 6);
-    const cube = await importMesh(
-      process.cwd(),
-      await readFile('examples/cantilever.msh'),
-      'c.msh',
-      1,
-    );
+    const cube = await importMesh(backend, await readFile('examples/cantilever.msh'), 'c.msh', 1);
     expect(cube.triangleFaceNodes).toBeUndefined();
     expect(mesh.positions).toBeInstanceOf(Float64Array);
     expect(mesh.groups.find((g) => g.name === 'ground')?.members).toEqual(
@@ -31,9 +30,41 @@ describe('Echter Python-Prozess', () => {
     );
   });
   it('zeigt bei fehlender Umgebung einen Installationshinweis', async () => {
-    expect(await backendStatus(path.join(process.cwd(), 'nicht-vorhanden'))).toMatchObject({
+    expect(
+      await backendStatus(developmentBackend(path.join(process.cwd(), 'nicht-vorhanden'), {})),
+    ).toMatchObject({
       available: false,
+      message: expect.stringContaining('npm run setup:backend'),
     });
+  });
+  it('nennt bei fehlender Paket-Runtime die Neuinstallation statt Entwicklerbefehlen', async () => {
+    const status = await backendStatus({
+      ...backend,
+      python: path.join(process.cwd(), 'nicht-vorhanden', 'python3'),
+      missingRuntime: 'Bitte Femantis neu installieren.',
+    });
+    expect(status).toMatchObject({ available: false, message: 'Bitte Femantis neu installieren.' });
+  });
+  it('rechnet mit den Isolationsschaltern des Pakets, ohne Bytecode neben den Adapter zu schreiben', async () => {
+    const resources = await mkdtemp(path.join(tmpdir(), 'femantis-resources-'));
+    try {
+      for (const name of ['adapter.py', 'models.py'])
+        await cp(path.join('backend', name), path.join(resources, name));
+      const packaged = {
+        ...backend,
+        pythonArgs: ['-E', '-s', '-B', '-X', 'utf8'],
+        adapter: path.join(resources, 'adapter.py'),
+        cwd: resources,
+      };
+      expect(await backendStatus(packaged)).toMatchObject({ available: true });
+      const parsed = await requestBackend(packaged, 'parseModel', {
+        text: await readFile('examples/heat.toml', 'utf8'),
+      });
+      expect(parsed).toMatchObject({ physics: 'heat' });
+      expect(await readdir(resources)).toEqual(['adapter.py', 'models.py']);
+    } finally {
+      await rm(resources, { recursive: true, force: true });
+    }
   });
 });
 

@@ -20,6 +20,7 @@ import {
   type RunFiles,
 } from './project-store';
 import { RunCache } from './run-cache';
+import { runtimeLayout, type RuntimeLayout } from './runtime';
 import {
   defaultView,
   type Physics,
@@ -35,6 +36,19 @@ import { randomUUID } from 'node:crypto';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
+let layoutCache: RuntimeLayout | null = null;
+/** Paths of the checkout or the packaged app; resolved after `app` is ready. */
+function layout(): RuntimeLayout {
+  layoutCache ??= runtimeLayout({
+    packaged: app.isPackaged,
+    appRoot: root,
+    resourcesPath: process.resourcesPath,
+    userData: app.getPath('userData'),
+    platform: process.platform,
+    env: process.env,
+  });
+  return layoutCache;
+}
 const rendererFile = path.resolve(here, '../renderer/index.html');
 let window: BrowserWindow;
 let source: MeshSource | null = null;
@@ -56,10 +70,7 @@ let selectedRunId: string | null = null;
 let cacheReady: Promise<RunCache> | null = null;
 function runCache(): Promise<RunCache> {
   if (!cacheReady) {
-    const configured = process.env.FEMANTIS_RUN_CACHE;
-    if (configured && !path.isAbsolute(configured))
-      throw new Error('FEMANTIS_RUN_CACHE muss ein absoluter Pfad sein.');
-    cacheReady = RunCache.open(configured || path.join(root, '.cache/runs')).then(async (cache) => {
+    cacheReady = RunCache.open(layout().runCache).then(async (cache) => {
       // Sessions of crashed or closed instances are unreachable; legacy runs stay
       // until the user cleans the cache explicitly.
       await cache.prune([], { legacy: false });
@@ -133,9 +144,9 @@ async function loaded(
   view: ViewState,
   nextRuns?: { runs: RunEntry[]; selected: string | null },
 ) {
-  const status = await backendStatus(root);
+  const status = await backendStatus(layout().backend);
   if (!status.available) throw new Error(status.message || 'FEM-Toolbox nicht verfügbar.');
-  const mesh = await importMesh(root, next.bytes, next.name, next.scale);
+  const mesh = await importMesh(layout().backend, next.bytes, next.name, next.scale);
   await replaceRuns(nextRuns?.runs ?? [], nextRuns?.selected ?? null);
   source = next;
   projectPath = filename;
@@ -168,7 +179,7 @@ function register(channel: string, handler: (...args: unknown[]) => Promise<unkn
 }
 
 function setupAPI(): void {
-  register('desktop:status', () => backendStatus(root));
+  register('desktop:status', () => backendStatus(layout().backend));
   register('desktop:dirty', async (value) => {
     dirty = z.boolean().parse(value);
   });
@@ -177,7 +188,7 @@ function setupAPI(): void {
     if (!allowDiscard()) return null;
     return loaded(
       await readMeshSource(
-        path.join(root, 'examples', value === 'tet4' ? 'cantilever.msh' : 'tet10-groups.msh'),
+        path.join(layout().examples, value === 'tet4' ? 'cantilever.msh' : 'tet10-groups.msh'),
         1,
       ),
       value === 'tet4' ? 'Kragträger · Tet4' : 'Tetraeder · Tet10',
@@ -209,7 +220,7 @@ function setupAPI(): void {
     const project = await openProjectFile(file);
     const calculation = project.run
       ? await loadCalculation(
-          root,
+          layout().backend,
           project.run.directory,
           project.run.id,
           project.run.modelKey,
@@ -266,7 +277,11 @@ function setupAPI(): void {
     if (!source) throw new Error('Bitte zuerst ein Netz öffnen.');
     const document = parseModelDocument(value);
     return withMeshInput(source, (filename) =>
-      requestBackend(root, 'validateModel', { path: filename, scale: source!.scale, document }),
+      requestBackend(layout().backend, 'validateModel', {
+        path: filename,
+        scale: source!.scale,
+        document,
+      }),
     );
   });
   register('desktop:solve', async (value) => {
@@ -278,7 +293,7 @@ function setupAPI(): void {
     const controller = new AbortController();
     activeJob = controller;
     try {
-      const result = await calculateModel(root, source, document, id, directory, {
+      const result = await calculateModel(layout().backend, source, document, id, directory, {
         signal: controller.signal,
         onPhase: (event) => window.webContents.send('desktop:job', event),
       });
@@ -310,7 +325,7 @@ function setupAPI(): void {
     if (!source) throw new Error('Bitte zuerst ein Netz öffnen.');
     const entry = findRun(value);
     const result = await loadCalculation(
-      root,
+      layout().backend,
       entry.directory,
       entry.id,
       entry.modelKey,
@@ -352,7 +367,7 @@ function setupAPI(): void {
     if (!allowDiscard()) return null;
     const directory = await mkdtemp(path.join(tmpdir(), 'femantis-box-'));
     try {
-      await requestBackend(root, 'createBox', { ...spec, outputDir: directory });
+      await requestBackend(layout().backend, 'createBox', { ...spec, outputDir: directory });
       return await loaded(
         await readMeshSource(path.join(directory, 'box.vtu'), 1),
         'Quader · Tet4',
@@ -375,7 +390,9 @@ function setupAPI(): void {
     if ((await stat(filename)).size > 2 * 1024 * 1024)
       throw new Error('Die Modelldatei ist zu groß.');
     const document = parseModelDocument(
-      await requestBackend(root, 'parseModel', { text: await readFile(filename, 'utf8') }),
+      await requestBackend(layout().backend, 'parseModel', {
+        text: await readFile(filename, 'utf8'),
+      }),
     );
     if (!document.mesh?.path) throw new Error('Das TOML-Modell benötigt einen relativen Netzpfad.');
     const folder = await realpath(path.dirname(filename));
@@ -410,7 +427,7 @@ function setupAPI(): void {
     const snapshot = { ...document, mesh: { path: meshName, length_scale_to_m: source.scale } };
     const result = z
       .object({ text: z.string() })
-      .parse(await requestBackend(root, 'dumpModel', { document: snapshot }));
+      .parse(await requestBackend(layout().backend, 'dumpModel', { document: snapshot }));
     await writeFile(path.join(path.dirname(filename), meshName), source.bytes, { flag: 'wx' });
     const temporary = filename + '.' + randomUUID() + '.tmp';
     try {

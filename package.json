@@ -16,7 +16,10 @@
     "setup:backend": "node scripts/setup-backend.mjs",
     "benchmark": "node scripts/venv-python.mjs scripts/benchmark_backend.py",
     "benchmark:meshes": "node scripts/venv-python.mjs scripts/generate_viewer_meshes.py",
-    "benchmark:viewer": "npm run build && playwright test -c playwright.benchmark.config.ts"
+    "benchmark:viewer": "npm run build && playwright test -c playwright.benchmark.config.ts",
+    "icon": "sh scripts/build_icon.sh",
+    "package:mac": "npm run build && node scripts/package_macos.mjs",
+    "test:package": "playwright test -c playwright.package.config.ts"
   },
   "dependencies": {
     "lucide-react": "1.56.0",
@@ -26,6 +29,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@electron/packager": "20.3.0",
     "@playwright/test": "1.64.0",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
@@ -38,5 +42,7 @@
     "typescript": "7.0.2",
     "vite": "7.3.7",
     "vitest": "4.1.11"
-  }
+  },
+  "productName": "Femantis",
+  "license": "GPL-3.0-or-later"
 }

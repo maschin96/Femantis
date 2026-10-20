@@ -11,6 +11,9 @@ import {
   pathAncestors,
   type Diagnostic,
 } from '../src/shared/diagnostics';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 const conflict: Diagnostic = {
   version: 1,
@@ -125,7 +128,7 @@ describe('Echte Diagnose über den Python-Prozess', () => {
     const document = JSON.parse(
       await readFile('tests/fixtures/heat-unknown-set.json', 'utf8'),
     ) as Record<string, unknown>;
-    const failure = await requestBackend(process.cwd(), 'validateModel', {
+    const failure = await requestBackend(backend, 'validateModel', {
       path: path.resolve('examples/cantilever.msh'),
       document,
     }).catch((error: unknown) => error);
