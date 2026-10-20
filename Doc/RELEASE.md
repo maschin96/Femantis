@@ -43,7 +43,10 @@ FEMANTIS_PACKAGE_SANDBOX=1 npm run test:package
 - `Femantis-<version>-mac-arm64.build.json`: Commit, sauberer Arbeitsbaum ja/nein,
   Electron-, Python- und Paketversionen, Signaturart, Zahl der signierten Mach-O-Dateien,
   `bundleDigest` (SHA-256 über alle Pfade, Dateiinhalte und Symlinkziele des
-  signierten Bundles) sowie Größe und SHA-256 des DMG
+  signierten Bundles), `contentDigest` (dasselbe ohne Code-Signaturen, siehe unten)
+  sowie Größe und SHA-256 des DMG
+- `Femantis-<version>-mac-arm64.bundle-manifest.txt` und `.content-manifest.txt`: die
+  Einzelwerte hinter beiden Digests, eine Zeile je Pfad
 - `SHA256SUMS`
 
 Downloads liegen in `.cache/packaging/`. Bau, Signatur und DMG-Inhalt entstehen in
@@ -62,8 +65,29 @@ Netzwerk (außer Loopback für Playwright) und ohne Lesezugriff auf Repository,
 Homebrew und das python.org-Framework. Chromium kann seine eigene Sandbox darin nicht
 initialisieren; nur dieser Modus startet deshalb mit `--no-sandbox`.
 
-Reproduzierbarkeit bedeutet hier: gleiche gepinnte Eingaben ergeben ein Bundle mit
-gleichem `bundleDigest`. Das DMG selbst enthält Zeitstempel und ist nicht bitgleich.
+Reproduzierbarkeit bedeutet hier zweierlei; das DMG selbst enthält Zeitstempel und
+ist nicht bitgleich:
+
+- **`contentDigest` – maschinenübergreifend gleich.** Gleiche gepinnte Eingaben ergeben
+  auf jedem Mac denselben Wert. Mach-O-Dateien gehen ohne Code-Signatur ein (Datei bis
+  zum Signaturbeginn; die von der Signaturgröße abhängigen Felder `__LINKEDIT`-
+  `vmsize`/`filesize` und `LC_CODE_SIGNATURE`-`datasize` auf null gesetzt;
+  Universal-Dateien je Architektur), `_CodeSignature/`-Ordner werden übersprungen. Alle
+  übrigen Dateien, Pfade und Symlinks gehen unverändert ein. Belegt mit macOS 27.0.1
+  lokal und macOS 15 in der CI (Nachweis #10).
+- **`bundleDigest` – nur auf derselben Maschine gleich.** Er umfasst die signierten
+  Bytes. `codesign` schreibt je nach macOS-Version andere Signaturen: macOS 27 hasht
+  arm64-Code standardmäßig in 16-KiB-Seiten, der Runner mit macOS 15 in 4-KiB-Seiten,
+  und dessen `codesign` reserviert hinter einer Ad-hoc-Signatur rund 18 KB Nullbytes.
+  Das ändert jede neu signierte Mach-O-Datei und die `CodeResources`-Siegel. Ein
+  explizites `--pagesize` gleicht nur die Seitengröße an, nicht den reservierten
+  Platz; dafür bietet `codesign` keine Option. Bitgleiche signierte Bundles zwischen
+  Maschinen bräuchten ein gepinntes, versionsunabhängiges Signierwerkzeug.
+
+Leere Ordner unter `node_modules` werden vor dem Packen von `app.asar` entfernt: Je nach
+npm-Umgebung bleiben dort leere Scope-Ordner übersprungener optionaler Pakete zurück
+(etwa `@napi-rs`), und `app.asar` verzeichnet leere Ordner. Über den
+Integritätshash hätte das `Info.plist` und das Electron Framework mitverändert.
 
 ## Lizenz
 
@@ -113,7 +137,8 @@ mit Nachweis erledigt sind.
       `"workingTreeClean": true` und den erwarteten Commit.
 - [ ] `npm run test:package` und `FEMANTIS_PACKAGE_SANDBOX=1 npm run test:package` grün.
 - [ ] Zweiter Build aus demselben Commit auf derselben Maschine liefert denselben
-      `bundleDigest` (maschinenübergreifend bisher nicht gleich, siehe Nachweis #10).
+      `bundleDigest`; der `contentDigest` stimmt mit dem des CI-Jobs „Package · macOS 15“
+      (Artefakt `bundle-manifest`) überein.
 - [ ] Lizenzordner im DMG gesichtet; neue Abhängigkeiten haben Lizenztexte.
 
 ### 2. Integration
@@ -125,7 +150,8 @@ mit Nachweis erledigt sind.
 ### 3. Tag
 
 - [ ] Annotierter Tag `v<version>` auf genau dem geprüften `main`-Commit.
-- [ ] Paket aus dem Tag neu gebaut; `bundleDigest` stimmt mit Gate 1 überein.
+- [ ] Paket aus dem Tag neu gebaut; `contentDigest` stimmt mit Gate 1 überein
+      (`bundleDigest` ebenfalls, wenn auf derselben Maschine gebaut).
 
 ### 4. Veröffentlichung
 

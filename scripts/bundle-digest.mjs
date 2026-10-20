@@ -21,6 +21,11 @@ async function sha256(file) {
   return hash.digest('hex');
 }
 
+/** Manifest paths use `/` on every platform. */
+function relativePath(from, to) {
+  return path.relative(from, to).split(path.sep).join('/');
+}
+
 function sortedEntries(directory) {
   return readdirSync(directory, { withFileTypes: true }).sort((a, b) =>
     a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
@@ -93,7 +98,7 @@ export async function bundleDigest(app) {
   const visit = async (directory) => {
     for (const entry of sortedEntries(directory)) {
       const full = path.join(directory, entry.name);
-      const relative = path.relative(app, full);
+      const relative = relativePath(app, full);
       if (entry.isSymbolicLink()) entries.push(`L ${relative} ${readlinkSync(full)}`);
       else if (entry.isDirectory()) await visit(full);
       else entries.push(`F ${relative} ${await sha256(full)}`);
@@ -114,7 +119,7 @@ export async function contentDigest(app) {
   const visit = async (directory) => {
     for (const entry of sortedEntries(directory)) {
       const full = path.join(directory, entry.name);
-      const relative = path.relative(app, full);
+      const relative = relativePath(app, full);
       if (entry.isSymbolicLink()) entries.push(`L ${relative} ${readlinkSync(full)}`);
       else if (entry.isDirectory()) {
         if (entry.name !== '_CodeSignature') await visit(full);
@@ -142,7 +147,7 @@ export function removeEmptyDirectories(directory) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory() && !entry.isSymbolicLink() && visit(full)) {
         rmdirSync(full);
-        removed.push(path.relative(directory, full));
+        removed.push(relativePath(directory, full));
       } else empty = false;
     }
     return empty;
