@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowDownToLine,
   Box,
@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   FileBox,
+  FileDown,
   FolderOpen,
   Grid2X2,
   Layers,
@@ -38,16 +39,25 @@ import type {
 } from '../shared/types';
 import { defaultView } from '../shared/types';
 import { MeshViewer } from './viewer/MeshViewer';
-import { newModel, canonicalModel, physicsLabels } from '../shared/model';
+import { newModel, canonicalModel, parseModelDocument, physicsLabels } from '../shared/model';
 import { ModelEditor } from './ModelEditor';
 import { BoxCreator } from './BoxCreator';
 import { ModelRestartDialog } from './ModelRestartDialog';
-import { ResultsPanel } from './ResultsPanel';
+import { ResultControls, ResultsPanel } from './ResultsPanel';
+import { Ribbon, RibbonButton, RibbonGroup, RibbonStack, type RibbonTab } from './Ribbon';
+import type { Insets } from './viewer/frame';
 import { RunHistory } from './RunHistory';
 import { formatBytes } from './runs';
 import { decodeDiagnostic, describeDiagnostic, type Diagnostic } from '../shared/diagnostics';
 import { scalarValues, fieldLimits } from './viewer/fields';
-import { actionLabels, nextStep, stepStates, type GuidanceAction, type Stage } from './guidance';
+import {
+  actionLabels,
+  nextStep,
+  stepStates,
+  tabAvailable,
+  type GuidanceAction,
+  type Stage,
+} from './guidance';
 
 const number = (value: number) => value.toLocaleString('de-AT');
 const length = (value: number) =>
@@ -112,6 +122,52 @@ export function App() {
   const [customLimits, setCustomLimits] = useState<[number, number] | null>(null);
   const [factor, setFactor] = useState(0);
   const [pendingJSON, setPendingJSON] = useState(false);
+  // The ribbon follows the workflow stage; "Ansicht" only swaps the command tray.
+  const [ribbonTab, setRibbonTab] = useState<Stage | 'view'>('mesh');
+  const [ribbonCollapsed, setRibbonCollapsed] = useState(false);
+  useEffect(() => setRibbonTab(stage), [stage]);
+  const appRef = useRef<HTMLDivElement>(null);
+  const ribbonRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const inspectorRef = useRef<HTMLElement>(null);
+  const dockRef = useRef<HTMLElement>(null);
+  const [insets, setInsets] = useState<Insets>({ top: 0, right: 0, bottom: 0, left: 0 });
+  useLayoutEffect(() => {
+    // The canvas spans the window; the free area between the floating panes frames the model.
+    const measure = () => {
+      const app = appRef.current?.getBoundingClientRect();
+      const top = ribbonRef.current?.getBoundingClientRect();
+      const left = sidebarRef.current?.getBoundingClientRect();
+      const right = inspectorRef.current?.getBoundingClientRect();
+      const bottom = dockRef.current?.getBoundingClientRect();
+      if (!app || !top || !left || !right || !bottom) return;
+      const next = {
+        top: Math.round(top.bottom - app.top),
+        right: Math.round(app.right - right.left),
+        bottom: Math.round(app.bottom - bottom.top),
+        left: Math.round(left.right - app.left),
+      };
+      setInsets((previous) =>
+        previous.top === next.top &&
+        previous.right === next.right &&
+        previous.bottom === next.bottom &&
+        previous.left === next.left
+          ? previous
+          : next,
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    for (const element of [
+      appRef.current,
+      ribbonRef.current,
+      sidebarRef.current,
+      inspectorRef.current,
+      dockRef.current,
+    ])
+      if (element) observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  }, []);
   function acceptResult(next: ResultPacket) {
     setResult(next);
     const primary =
@@ -352,6 +408,33 @@ export function App() {
   const guidance = nextStep(workflow);
   const completed = stepStates(workflow);
   const locked = !!busy || pendingJSON;
+  const available = tabAvailable(workflow, locked);
+  const modelError = useMemo(() => {
+    if (!model) return '';
+    try {
+      parseModelDocument(model);
+      return '';
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }, [model]);
+  function showMode(mode: ViewState['mode']) {
+    changeView({ mode });
+    // The model editor and calculation card cover the view; show the mesh stage instead.
+    if (stage === 'model' || stage === 'calculation') setStage('mesh');
+  }
+  function checkBackend() {
+    void run('Anbindung prüfen', async () => {
+      const status = await window.desktop.backendStatus();
+      setBackend(status);
+      notice(
+        status.available
+          ? `FEM-Toolbox ${status.toolboxVersion} ist verfügbar.`
+          : status.message || 'Anbindung nicht verfügbar.',
+        status.available ? 'info' : 'error',
+      );
+    });
+  }
   const errorCount = notices.filter((item) => item.kind === 'error').length;
   const groupCount = (kind: 'volume' | 'facet') =>
     mesh?.groups.filter((group) => group.kind === kind).length || 0;
@@ -360,68 +443,314 @@ export function App() {
     else setStage(action);
   }
 
-  return (
-    <div className="app">
-      <header className="topbar glass">
-        <Logo />
-        <div className="project-title">
-          <span>
-            {projectName}
-            {dirty && (
-              <b
-                className="dirty-dot"
-                title="Ungespeicherte Änderungen"
-                aria-label="Ungespeichert"
-              />
-            )}
-          </span>
-          <small>{projectPath ? 'Gespeichertes Projekt' : 'Lokaler Arbeitsbereich'}</small>
-        </div>
-        <nav className="workflow" aria-label="Arbeitsablauf">
-          {stages.map(([tab, label], index) => (
-            <button
-              key={tab}
-              className={`step ${stage === tab ? 'active' : ''} ${completed[tab] ? 'done' : ''}`}
-              aria-current={stage === tab ? 'step' : undefined}
-              disabled={
-                locked ||
-                (tab === 'model' && !model) ||
-                (tab === 'calculation' && !model) ||
-                (tab === 'results' && !result)
-              }
-              onClick={() => setStage(tab)}
-            >
-              <span className="step-index">0{index + 1}</span>
-              <span className="step-label">{label}</span>
-              {completed[tab] && <span className="sr-only"> · erledigt</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="header-actions">
-          <button
-            className="glass-button"
+  const stageTabs: RibbonTab<Stage | 'view'>[] = [
+    ...stages.map(([tab, label], index) => ({
+      id: tab,
+      label,
+      index: `0${index + 1}`,
+      done: completed[tab],
+      disabled: !available[tab],
+    })),
+    { id: 'view', label: 'Ansicht' },
+  ];
+  const viewGroups = (
+    <>
+      <RibbonGroup label="Darstellung">
+        <RibbonStack>
+          <RibbonButton
+            icon={<Box size={14} />}
+            label="Bauteil"
+            pressed={view.mode === 'part'}
             disabled={locked}
-            title="Projekt öffnen"
+            onClick={() => showMode('part')}
+          />
+          <RibbonButton
+            icon={<Grid2X2 size={14} />}
+            label="Netz"
+            pressed={view.mode === 'mesh'}
+            disabled={locked}
+            onClick={() => showMode('mesh')}
+          />
+        </RibbonStack>
+      </RibbonGroup>
+      <RibbonGroup label="Einblenden">
+        <RibbonStack>
+          <RibbonButton
+            icon={<CircleDot size={14} />}
+            label="Knoten"
+            pressed={view.showNodes}
+            disabled={!mesh}
+            onClick={() => changeView({ showNodes: !view.showNodes })}
+          />
+          <RibbonButton
+            icon={<Move3D size={14} />}
+            label="Achsen"
+            pressed={view.showAxes}
+            disabled={!mesh}
+            onClick={() => changeView({ showAxes: !view.showAxes })}
+          />
+        </RibbonStack>
+      </RibbonGroup>
+    </>
+  );
+  const validate = () =>
+    void run('Modell prüfen', async () => {
+      await window.desktop.validateModel(model!);
+      notice('Modellprüfung bestanden. Materialien und Randbedingungen sind konsistent.');
+    });
+  const calculateCommand = (
+    <>
+      <span className="ribbon-spacer" />
+      <RibbonGroup label="Berechnung">
+        <RibbonButton
+          size="large"
+          primary
+          icon={<Play size={24} />}
+          label="Berechnen"
+          disabled={!model || locked || !!modelError}
+          onClick={() => void calculate()}
+        />
+      </RibbonGroup>
+    </>
+  );
+  const checkCommand = (
+    <RibbonGroup label="Prüfen">
+      <RibbonButton
+        size="large"
+        icon={<CheckCircle2 size={24} />}
+        label="Modell prüfen"
+        disabled={!model || locked || !!modelError}
+        onClick={validate}
+      />
+    </RibbonGroup>
+  );
+  const commands: Record<Stage | 'view', ReactNode> = {
+    mesh: (
+      <>
+        <RibbonGroup label="Import">
+          <RibbonButton
+            size="large"
+            icon={<ArrowDownToLine size={24} />}
+            label="Netz öffnen"
+            title="Gmsh (.msh) oder VTU (.vtu) öffnen · VTU-Koordinaten in m"
+            disabled={locked || !backend.available}
             onClick={() =>
-              void run('Projekt öffnen', async () => accept(await window.desktop.openProject()))
+              void run('Netz importieren', async () => accept(await window.desktop.openMesh(scale)))
             }
-          >
-            <FolderOpen size={15} />
-            Projekt öffnen
-          </button>
-          <button
-            className="primary"
-            disabled={!mesh || locked}
-            title="Speichern (⌘S)"
-            onClick={() => void save()}
-          >
-            <Save size={15} />
-            Speichern
-          </button>
-        </div>
-      </header>
+          />
+          <RibbonStack>
+            <label className="rb-field">
+              Gmsh-Einheit
+              <select
+                aria-label="Gmsh-Längeneinheit"
+                value={scale}
+                disabled={locked}
+                onChange={(event) => setScale(Number(event.target.value))}
+              >
+                <option value={1}>m</option>
+                <option value={0.001}>mm</option>
+              </select>
+            </label>
+          </RibbonStack>
+        </RibbonGroup>
+        <RibbonGroup label="Erstellen">
+          <RibbonButton
+            size="large"
+            icon={<Box size={24} />}
+            label="Quader erstellen"
+            disabled={locked || !backend.available}
+            onClick={() => setBoxDialog(true)}
+          />
+        </RibbonGroup>
+        <RibbonGroup label="Beispiele">
+          <RibbonStack>
+            <RibbonButton
+              icon={<Box size={14} />}
+              label="Kragträger · Tet4"
+              disabled={locked || !backend.available}
+              onClick={() =>
+                void run('Tet4-Beispiel laden', async () =>
+                  accept(await window.desktop.loadExample('tet4')),
+                )
+              }
+            />
+            <RibbonButton
+              icon={<Grid2X2 size={14} />}
+              label="Tetraeder · Tet10"
+              disabled={locked || !backend.available}
+              onClick={() =>
+                void run('Tet10-Beispiel laden', async () =>
+                  accept(await window.desktop.loadExample('tet10')),
+                )
+              }
+            />
+          </RibbonStack>
+        </RibbonGroup>
+        {viewGroups}
+      </>
+    ),
+    model: (
+      <>
+        <RibbonGroup label="TOML-Modell">
+          <RibbonStack>
+            <RibbonButton
+              icon={<FolderOpen size={14} />}
+              label="TOML öffnen"
+              disabled={locked}
+              onClick={() =>
+                void run('TOML-Modell öffnen', async () => accept(await window.desktop.openModel()))
+              }
+            />
+            <RibbonButton
+              icon={<FileDown size={14} />}
+              label="TOML exportieren"
+              disabled={!model || locked}
+              onClick={() =>
+                void run('TOML-Modell exportieren', async () => {
+                  const file = await window.desktop.exportModel(model!);
+                  if (file) notice('TOML-Modell und zugehöriges Netz exportiert.');
+                })
+              }
+            />
+          </RibbonStack>
+        </RibbonGroup>
+        {checkCommand}
+        {calculateCommand}
+      </>
+    ),
+    calculation: (
+      <>
+        {checkCommand}
+        <RibbonGroup label="Anbindung">
+          <RibbonButton
+            size="large"
+            icon={<RefreshCw size={24} />}
+            label="Anbindung prüfen"
+            disabled={locked}
+            onClick={checkBackend}
+          />
+        </RibbonGroup>
+        <RibbonGroup label="Lauf">
+          <RibbonStack>
+            <RibbonButton
+              icon={<X size={14} />}
+              label="Berechnung abbrechen"
+              disabled={!busy || !phase}
+              onClick={() => void window.desktop.cancelJob()}
+            />
+          </RibbonStack>
+        </RibbonGroup>
+        {calculateCommand}
+      </>
+    ),
+    results:
+      result && resultField ? (
+        <ResultControls
+          result={result}
+          field={resultField}
+          component={component}
+          limits={limits}
+          customLimits={customLimits}
+          factor={factor}
+          onField={(id) => {
+            const field = result.fields.find((f) => f.id === id)!;
+            setFieldId(id);
+            setComponent(field.components.length === 3 ? 'magnitude' : field.components[0]);
+            setCustomLimits(null);
+          }}
+          onComponent={(c) => {
+            setComponent(c);
+            setCustomLimits(null);
+          }}
+          onLimits={setCustomLimits}
+          onFactor={setFactor}
+        />
+      ) : null,
+    view: viewGroups,
+  };
+
+  return (
+    <div className="app" ref={appRef}>
+      <div className="viewer-layer">
+        <MeshViewer
+          mesh={mesh}
+          view={view}
+          selectedTriangle={selectedTriangle}
+          onPick={(value) => {
+            setSelectedTriangle(value);
+            if (value !== null && view.selectedGroup) changeView({ selectedGroup: null });
+          }}
+          onCamera={(camera) => changeView({ camera })}
+          field={stage === 'results' ? resultField : null}
+          component={component}
+          limits={limits}
+          displacement={stage === 'results' ? displacement : null}
+          deformationFactor={stage === 'results' ? factor : 0}
+          insets={insets}
+        />
+        {/* Like the former viewer overlay: no picking or orbiting while a job runs. */}
+        {busy && <div className="viewer-block" />}
+      </div>
+      <div className="ribbon-slot" ref={ribbonRef}>
+        <Ribbon
+          tabs={stageTabs}
+          active={ribbonTab}
+          onTab={(id) => {
+            setRibbonTab(id);
+            if (id !== 'view') setStage(id);
+          }}
+          collapsed={ribbonCollapsed}
+          onCollapse={setRibbonCollapsed}
+          title={
+            <>
+              <Logo />
+              <div className="qat">
+                <button
+                  disabled={locked}
+                  aria-label="Projekt öffnen"
+                  title="Projekt öffnen"
+                  onClick={() =>
+                    void run('Projekt öffnen', async () =>
+                      accept(await window.desktop.openProject()),
+                    )
+                  }
+                >
+                  <FolderOpen size={14} />
+                </button>
+                <button
+                  disabled={!mesh || locked}
+                  aria-label="Speichern"
+                  title="Speichern (⌘S)"
+                  onClick={() => void save()}
+                >
+                  <Save size={14} />
+                </button>
+              </div>
+              <div className="project-title">
+                <span>
+                  {projectName}
+                  {dirty && (
+                    <b
+                      className="dirty-dot"
+                      title="Ungespeicherte Änderungen"
+                      aria-label="Ungespeichert"
+                    />
+                  )}
+                </span>
+                <small>{projectPath ? 'Gespeichertes Projekt' : 'Lokaler Arbeitsbereich'}</small>
+              </div>
+              <div className="ribbon-status">
+                <i className={backend.available ? 'status-dot ready' : 'status-dot'} />
+                {backend.available ? `FEM-Toolbox ${backend.toolboxVersion}` : 'Anbindung fehlt'}
+              </div>
+            </>
+          }
+        >
+          {commands[ribbonTab]}
+        </Ribbon>
+      </div>
       <main className="workspace">
-        <aside className="sidebar glass" aria-label="Projekt">
+        <aside className="sidebar float-glass" aria-label="Projekt" ref={sidebarRef}>
           <div className="panel-heading">
             <span>Projekt</span>
             <Layers size={14} />
@@ -512,155 +841,27 @@ export function App() {
               </div>
             ))}
           </div>
-          <div className="source-card">
-            <div className="section-label">Netz laden</div>
-            <div className="import-row">
-              <label className="unit-label">
-                <span>Gmsh-Einheit</span>
-                <select
-                  aria-label="Gmsh-Längeneinheit"
-                  value={scale}
-                  disabled={locked}
-                  onChange={(event) => setScale(Number(event.target.value))}
-                >
-                  <option value={1}>m</option>
-                  <option value={0.001}>mm</option>
-                </select>
-              </label>
-              <button
-                className="primary"
-                disabled={locked || !backend.available}
-                title="Gmsh (.msh) oder VTU (.vtu) öffnen"
-                onClick={() =>
-                  void run('Netz importieren', async () =>
-                    accept(await window.desktop.openMesh(scale)),
-                  )
-                }
-              >
-                <ArrowDownToLine size={15} />
-                Netz öffnen
-              </button>
-            </div>
-            <small>Gmsh .msh oder VTU .vtu · VTU-Koordinaten in m.</small>
-            <button
-              className="source-action"
-              disabled={locked || !backend.available}
-              onClick={() => setBoxDialog(true)}
-            >
-              <Box size={15} />
-              Quader erstellen
-              <ChevronRight size={13} />
-            </button>
-            <div className="section-label examples-label">Beispiele</div>
-            <button
-              className="source-action"
-              disabled={locked || !backend.available}
-              onClick={() =>
-                void run('Tet4-Beispiel laden', async () =>
-                  accept(await window.desktop.loadExample('tet4')),
-                )
-              }
-            >
-              <Box size={15} />
-              Kragträger · Tet4
-              <ChevronRight size={13} />
-            </button>
-            <button
-              className="source-action"
-              disabled={locked || !backend.available}
-              onClick={() =>
-                void run('Tet10-Beispiel laden', async () =>
-                  accept(await window.desktop.loadExample('tet10')),
-                )
-              }
-            >
-              <Grid2X2 size={15} />
-              Tetraeder · Tet10
-              <ChevronRight size={13} />
-            </button>
-          </div>
         </aside>
-        <section className="viewer-panel glass">
-          <div className="viewer-toolbar">
-            <div className="segmented" role="group" aria-label="Darstellung">
-              <button
-                className={view.mode === 'part' ? 'active' : ''}
-                disabled={locked}
-                onClick={() => {
-                  changeView({ mode: 'part' });
-                  if (stage === 'model' || stage === 'calculation') setStage('mesh');
+        <div className="stage-area">
+          {stage === 'model' && mesh && model && (
+            <section className="stage-panel float-glass" aria-label="Modelleditor">
+              <ModelEditor
+                mesh={mesh}
+                document={model}
+                busy={!!busy}
+                onChange={editModel}
+                focusRequest={focusRequest}
+                onFocusHandled={() => setFocusRequest(null)}
+                onPendingChange={(value) => {
+                  setPendingJSON(value);
+                  if (value) setDirty(true);
                 }}
-              >
-                <Box size={15} />
-                Bauteil
-              </button>
-              <button
-                className={view.mode === 'mesh' ? 'active' : ''}
-                disabled={locked}
-                onClick={() => {
-                  changeView({ mode: 'mesh' });
-                  if (stage === 'model' || stage === 'calculation') setStage('mesh');
-                }}
-              >
-                <Grid2X2 size={15} />
-                Netz
-              </button>
-            </div>
-            <div className="view-options">
-              <button
-                className={view.showNodes ? 'on' : ''}
-                aria-pressed={view.showNodes}
-                disabled={!mesh}
-                onClick={() => changeView({ showNodes: !view.showNodes })}
-              >
-                <CircleDot size={14} />
-                Knoten
-              </button>
-              <button
-                className={view.showAxes ? 'on' : ''}
-                aria-pressed={view.showAxes}
-                disabled={!mesh}
-                onClick={() => changeView({ showAxes: !view.showAxes })}
-              >
-                <Move3D size={14} />
-                Achsen
-              </button>
-            </div>
-          </div>
-          {stage === 'model' && mesh && model ? (
-            <ModelEditor
-              mesh={mesh}
-              document={model}
-              busy={!!busy}
-              onChange={editModel}
-              focusRequest={focusRequest}
-              onFocusHandled={() => setFocusRequest(null)}
-              onPendingChange={(value) => {
-                setPendingJSON(value);
-                if (value) setDirty(true);
-              }}
-              onValidate={() =>
-                void run('Modell prüfen', async () => {
-                  await window.desktop.validateModel(model);
-                  notice(
-                    'Modellprüfung bestanden. Materialien und Randbedingungen sind konsistent.',
-                  );
-                })
-              }
-              onCalculate={() => void calculate()}
-              onOpen={() =>
-                void run('TOML-Modell öffnen', async () => accept(await window.desktop.openModel()))
-              }
-              onExport={() =>
-                void run('TOML-Modell exportieren', async () => {
-                  const file = await window.desktop.exportModel(model);
-                  if (file) notice('TOML-Modell und zugehöriges Netz exportiert.');
-                })
-              }
-            />
-          ) : stage === 'calculation' && model ? (
+              />
+            </section>
+          )}
+          {stage === 'calculation' && model && (
             <div className="calculation-panel">
-              <div className="calculation-card">
+              <div className="calculation-card float-glass">
                 <span className="eyebrow">FEM-Toolbox · stationär</span>
                 <h2>Modell berechnen</h2>
                 <p>
@@ -681,53 +882,24 @@ export function App() {
                     </li>
                   ))}
                 </ol>
-                {busy ? (
-                  <button
-                    className="cancel-calculation"
-                    onClick={() => void window.desktop.cancelJob()}
-                  >
-                    <X size={15} />
-                    Berechnung abbrechen
-                  </button>
-                ) : (
-                  <button className="primary large" onClick={() => void calculate()}>
-                    <Play size={15} />
-                    Berechnen
-                  </button>
-                )}
                 <p className="editor-hint">
-                  Die Oberfläche bleibt während der Berechnung bedienbar. Ein erfolgreicher
-                  Solverlauf ist kein experimenteller Validierungsnachweis.
+                  „Berechnen“ und „Berechnung abbrechen“ stehen im Menüband. Die Oberfläche bleibt
+                  während der Berechnung bedienbar. Ein erfolgreicher Solverlauf ist kein
+                  experimenteller Validierungsnachweis.
                 </p>
               </div>
             </div>
-          ) : (
-            <MeshViewer
-              mesh={mesh}
-              view={view}
-              selectedTriangle={selectedTriangle}
-              onPick={(value) => {
-                setSelectedTriangle(value);
-                if (value !== null && view.selectedGroup) changeView({ selectedGroup: null });
-              }}
-              onCamera={(camera) => changeView({ camera })}
-              field={stage === 'results' ? resultField : null}
-              component={component}
-              limits={limits}
-              displacement={stage === 'results' ? displacement : null}
-              deformationFactor={stage === 'results' ? factor : 0}
-            />
           )}
           {busy && stage !== 'calculation' && (
             <div className="busy-overlay" role="status">
-              <div>
+              <div className="float-glass">
                 <LoaderCircle className="spin" size={20} />
                 <span>{busy}…</span>
               </div>
             </div>
           )}
-        </section>
-        <aside className="inspector glass" aria-label="Eigenschaften">
+        </div>
+        <aside className="inspector float-glass" aria-label="Eigenschaften" ref={inspectorRef}>
           <section className="next-step" aria-label="Nächster Schritt">
             <span className="eyebrow">
               <Sparkles size={12} />
@@ -772,18 +944,6 @@ export function App() {
               customLimits={customLimits}
               factor={factor}
               stale={stale}
-              onField={(id) => {
-                const field = result.fields.find((f) => f.id === id)!;
-                setFieldId(id);
-                setComponent(field.components.length === 3 ? 'magnitude' : field.components[0]);
-                setCustomLimits(null);
-              }}
-              onComponent={(c) => {
-                setComponent(c);
-                setCustomLimits(null);
-              }}
-              onLimits={setCustomLimits}
-              onFactor={setFactor}
               values={resultValues!}
               selectedNodes={selectedNodes}
               selectedCell={owner}
@@ -913,7 +1073,11 @@ export function App() {
           </div>
         </aside>
       </main>
-      <section className={`dock glass ${consoleOpen ? 'open' : ''}`} aria-label="Meldungen">
+      <section
+        className={`dock float-glass ${consoleOpen ? 'open' : ''}`}
+        aria-label="Meldungen"
+        ref={dockRef}
+      >
         <div className="dock-bar">
           <span className="dock-status">
             <i className={backend.available ? 'status-dot ready' : 'status-dot'} />
@@ -945,25 +1109,6 @@ export function App() {
             <span>·</span>
             SI · Anzeige mm
           </span>
-          <button
-            className="check-backend"
-            disabled={locked}
-            onClick={() =>
-              void run('Anbindung prüfen', async () => {
-                const status = await window.desktop.backendStatus();
-                setBackend(status);
-                notice(
-                  status.available
-                    ? `FEM-Toolbox ${status.toolboxVersion} ist verfügbar.`
-                    : status.message || 'Anbindung nicht verfügbar.',
-                  status.available ? 'info' : 'error',
-                );
-              })
-            }
-          >
-            <RefreshCw size={13} />
-            Anbindung prüfen
-          </button>
           <button
             className="dock-toggle"
             aria-expanded={consoleOpen}

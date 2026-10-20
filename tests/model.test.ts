@@ -67,10 +67,6 @@ function renderEditor(document: ReturnType<typeof newModel>) {
       document,
       busy: false,
       onChange: noop,
-      onValidate: noop,
-      onCalculate: noop,
-      onOpen: noop,
-      onExport: noop,
       onPendingChange: noop,
     }),
   );
