@@ -23,7 +23,7 @@ def mesh_payload(mesh):
     topology = inspect_boundary_topology(mesh)
     if any(len(owners) > 2 for owners in topology.facet_incidence.values()):
         raise ValueError("Das Netz enthält eine nichtmannigfaltige Volumenfläche.")
-    triangles, owners, facets = [], [], []
+    triangles, owners, facets, face_nodes = [], [], [], []
     for face in topology.exterior_faces:
         nodes = face.nodes
         parts = [nodes] if len(nodes) == 3 else [
@@ -36,6 +36,9 @@ def mesh_payload(mesh):
             triangles.extend(triangle)
             owners.append(face.cell_index)
             facets.append(-1 if face.triangle_index is None else face.triangle_index)
+            if len(nodes) == 6:
+                # Corners, then the midside nodes of edges 01, 12, 20 (Toolbox face order).
+                face_nodes.extend(nodes)
     arrays = {
         "positions": np.asarray(mesh.points, dtype="<f8"),
         "triangles": np.asarray(triangles, dtype="<u4"),
@@ -43,6 +46,8 @@ def mesh_payload(mesh):
         "triangleFacets": np.asarray(facets, dtype="<i4"),
         "activeNodes": np.asarray(np.unique(mesh.cells), dtype="<u4"),
     }
+    if face_nodes:
+        arrays["triangleFaceNodes"] = np.asarray(face_nodes, dtype="<u4")
     groups = []
     for kind, selections in (("volume", mesh.volume_sets), ("facet", mesh.facet_sets)):
         for name, indices in sorted(selections.items()):
