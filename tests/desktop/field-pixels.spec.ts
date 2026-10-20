@@ -6,6 +6,7 @@ import {
   type Page,
 } from '@playwright/test';
 import { build } from 'vite';
+import { chromiumArgs } from './startup';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -46,7 +47,7 @@ test.beforeAll(async () => {
     });
     app.on('window-all-closed', () => app.quit());`,
   );
-  app = await electron.launch({ args: [entry], cwd: process.cwd() });
+  app = await electron.launch({ args: [entry, ...chromiumArgs], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {

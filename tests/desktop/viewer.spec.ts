@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 import path from 'node:path';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -39,7 +39,7 @@ write_vtu(sys.argv[1], mesh)
     ['-c', script, path.join(directory, 'ids.vtu')],
     { cwd: process.cwd() },
   );
-  application = await electron.launch({ args: ['.'], cwd: process.cwd() });
+  application = await electron.launch({ args: ['.', ...chromiumArgs], cwd: process.cwd() });
   page = await application.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   await expect(page.getByTestId('cell-count')).toHaveText('288', backendStartup);

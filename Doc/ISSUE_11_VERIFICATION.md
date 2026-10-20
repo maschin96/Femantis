@@ -28,6 +28,13 @@ funktioniert, ist damit nicht belegt.
 | Zeilenenden | `core.autocrlf=true` auf Windows-Runnern hätte Beispielnetze und Fixtures verändert (Hashes, Laufnachweise). | `.gitattributes` `* text=auto eol=lf`. Im Repository waren alle Textdateien schon LF; es ändern sich keine Bytes. |
 | Keine Windows-/Linux-Läufe | Plattformen waren unbelegt. | CI: Backend auf `windows-2025`, Desktop zusätzlich auf `windows-2025` und `ubuntu-24.04`. |
 
+Im ersten PR-Lauf (39380595984) zusätzlich gefunden:
+
+| Lücke | Wirkung | Änderung |
+|---|---|---|
+| Interne Containment-Prüfungen übergaben `path.relative(...)` an `resolveMeshPath`, das Backslashes ablehnt | Unter Windows ließen sich Projekte weder speichern noch öffnen (18 Vitest-Tests rot, Desktop-Speicherabläufe rot). | `assertInside` prüft aufgelöste native Pfade mit den Trennzeichen der Plattform; `resolveMeshPath` bleibt für die portablen `/`-Pfade der Projektdatei zuständig. Test mit `path.win32`-Semantik. |
+| WebGL unter Xvfb | Chromium setzt Software-OpenGL (Mesa llvmpipe) für WebGL auf die Blockliste; jeder Viewer-Start scheiterte. | Nur die Desktoptests des Linux-Jobs starten Electron mit `--ignore-gpu-blocklist` (`FEMANTIS_TEST_CHROMIUM_ARGS`). Die App selbst ist unverändert: Ohne GPU-Treiber meldet sie unter Linux weiterhin, dass die 3D-Ansicht nicht starten konnte. |
+
 Plattformneutral waren bereits: der Interpreterpfad der App (`Scripts/python.exe`),
 die Projektpfade mit `/` samt Ablehnung von Backslashes und absoluten
 Windows-Pfaden, `realpath`-/Symlinkprüfungen, atomares Speichern per `rename`,

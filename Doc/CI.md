@@ -7,7 +7,7 @@
 | Frontend · Node 22 | `ubuntu-24.04` | `npm ci`, `npm run build` einschließlich Typprüfung |
 | Backend · Python 3.11/3.12/3.13 | `ubuntu-24.04`, Matrix ohne `fail-fast` | `npm ci`, `npm run setup:backend` (öffentliche Toolbox am festen Commit), unter 3.13 Prüfung der installierten Versionen gegen `backend/constraints.txt`, `npm run test:backend`, `npm test` (Vitest einschließlich echter Python-Läufe) |
 | Backend · Python 3.13 · Windows | `windows-2025` | wie oben (#11) |
-| Desktop · macOS 15 / Windows 2025 / Ubuntu 24.04 | `macos-15` (arm64), `windows-2025`, `ubuntu-24.04`; Python 3.13 | `npm ci`, Toolbox-Setup, `npm run build`, `npm run test:desktop` mit echtem Electron/WebGL. Unter Linux mit `xvfb-run` (Software-OpenGL) und freigegebenen Benutzer-Namespaces für die Chromium-Sandbox (#11). Bei Fehlern `test-results/` sieben Tage als Artefakt `desktop-test-results-<os>` |
+| Desktop · macOS 15 / Windows 2025 / Ubuntu 24.04 | `macos-15` (arm64), `windows-2025`, `ubuntu-24.04`; Python 3.13 | `npm ci`, Toolbox-Setup, `npm run build`, `npm run test:desktop` mit echtem Electron/WebGL. Unter Linux mit `xvfb-run` (Software-OpenGL, dafür `--ignore-gpu-blocklist` nur in den Tests) und freigegebenen Benutzer-Namespaces für die Chromium-Sandbox (#11). Bei Fehlern `test-results/` sieben Tage als Artefakt `desktop-test-results-<os>` |
 
 Backend- und Desktopjobs warten auf den Frontend-Job und laufen nur für Branches
 dieses Repositorys und für `main`. Bei fremden Fork-PRs läuft nur die

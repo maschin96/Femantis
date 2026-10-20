@@ -5,13 +5,13 @@ import {
   type ElectronApplication,
   type Page,
 } from '@playwright/test';
-import { backendStartup } from './startup';
+import { backendStartup, chromiumArgs } from './startup';
 
 let app: ElectronApplication;
 let page: Page;
 const errors: string[] = [];
 test.beforeAll(async () => {
-  app = await electron.launch({ args: ['.'], cwd: process.cwd() });
+  app = await electron.launch({ args: ['.', ...chromiumArgs], cwd: process.cwd() });
   page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {

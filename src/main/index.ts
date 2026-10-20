@@ -27,7 +27,7 @@ import {
   type RunSummary,
   type ViewState,
 } from '../shared/types';
-import { viewSchema, resolveMeshPath } from '../shared/project';
+import { assertInside, viewSchema, resolveMeshPath } from '../shared/project';
 import { parseModelDocument } from '../shared/model';
 import { mkdtemp, readFile, writeFile, rm, realpath, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -380,7 +380,7 @@ function setupAPI(): void {
     if (!document.mesh?.path) throw new Error('Das TOML-Modell benötigt einen relativen Netzpfad.');
     const folder = await realpath(path.dirname(filename));
     const meshFile = await realpath(resolveMeshPath(folder, document.mesh.path));
-    resolveMeshPath(folder, path.relative(folder, meshFile));
+    assertInside(folder, meshFile);
     const scale = z
       .number()
       .finite()
