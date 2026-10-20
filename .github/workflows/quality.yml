@@ -132,7 +132,8 @@ jobs:
           path: |
             dist/*.bundle-manifest.txt
             dist/*.build.json
-          retention-days: 30
+            dist/*.dmg
+          retention-days: 7
       - run: npm run test:package
       - name: Offline smoke test in Seatbelt sandbox
         run: npm run test:package
