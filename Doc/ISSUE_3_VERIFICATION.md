@@ -1,7 +1,7 @@
 # Issue #3: Präzision der Felddarstellung
 
 14.10.2026, Basis `6a74f1d`, macOS/Apple Silicon.
-[Issue #3](https://github.com/maschin96/Firmantis/issues/3).
+[Issue #3](https://github.com/maschin96/Femantis/issues/3).
 
 ## Anzeigevertrag
 

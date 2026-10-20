@@ -1,6 +1,6 @@
 # Issue #7: Berechnungsläufe dauerhaft verwalten und lokalen Laufcache begrenzen
 
-Bezug: [Issue #7](https://github.com/maschin96/Firmantis/issues/7), Branch
+Bezug: [Issue #7](https://github.com/maschin96/Femantis/issues/7), Branch
 `codex/7-run-history-cache`, Basis `966d172` (`codex/24-liquid-glass-ui`; der Branch
 berührt UI-Code aus #24), 19.10.2026, macOS/Apple Silicon, FEM-Toolbox 1.4.0.
 

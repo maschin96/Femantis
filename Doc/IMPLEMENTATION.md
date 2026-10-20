@@ -2,7 +2,7 @@
 
 Fortsetzung mit Version 0.2: [Modellerstellung, Bearbeitung und Berechnung](MODELLING_IMPLEMENTATION.md). Die folgenden Angaben dokumentieren den ersten Viewer-Schnitt vom 13.10.2026; der [aktuelle Projektstand](PROJECT_STATUS.md) trennt spätere GitHub-Integration und offene Abnahmegates davon.
 
-Arbeitsbeginn: 13.10.2026. Lokale Arbeitspakete D0–D2 gemäß `ELECTRON_UI_PLAN.md`. Zum Zeitpunkt dieses ersten Viewer-Schnitts besaß das Desktopprojekt noch kein eigenes GitHub-Repository; seit dem 13.10.2026 liegt es unter [maschin96/Firmantis](https://github.com/maschin96/Firmantis). Die FEM-Toolbox wird als eingefrorene Abhängigkeit verwendet und nicht geändert. Die damalige offene Zuordnung zu Issues und Integrationsbranch ist eine historische Aussage, kein heutiger Status.
+Arbeitsbeginn: 13.10.2026. Lokale Arbeitspakete D0–D2 gemäß `ELECTRON_UI_PLAN.md`. Zum Zeitpunkt dieses ersten Viewer-Schnitts besaß das Desktopprojekt noch kein eigenes GitHub-Repository; seit dem 13.10.2026 liegt es unter [maschin96/Femantis](https://github.com/maschin96/Femantis). Die FEM-Toolbox wird als eingefrorene Abhängigkeit verwendet und nicht geändert. Die damalige offene Zuordnung zu Issues und Integrationsbranch ist eine historische Aussage, kein heutiger Status.
 
 ## Ziel und Akzeptanz
 

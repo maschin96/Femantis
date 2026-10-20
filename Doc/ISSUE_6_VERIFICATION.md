@@ -1,6 +1,6 @@
 # Issue #6: Strukturierte Toolbox-Diagnosen bis zum Editorfeld
 
-Bezug: [Issue #6](https://github.com/maschin96/Firmantis/issues/6), Basis `1fe9936`,
+Bezug: [Issue #6](https://github.com/maschin96/Femantis/issues/6), Basis `1fe9936`,
 19.10.2026, macOS/Apple Silicon, FEM-Toolbox 1.4.0.
 
 ## Diagnosevertrag (Version 1)

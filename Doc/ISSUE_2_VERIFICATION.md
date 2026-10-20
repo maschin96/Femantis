@@ -1,6 +1,6 @@
 # Issue #2: Modelldaten an Editorgrenzen absichern
 
-Bezug: [Issue #2](https://github.com/maschin96/Firmantis/issues/2), Basis `44360d2`,
+Bezug: [Issue #2](https://github.com/maschin96/Femantis/issues/2), Basis `44360d2`,
 14.10.2026, macOS/Apple Silicon. Toolbox 1.4.0 bleibt unverändert am gepinnten Commit.
 
 ## Verhalten und Umfang
@@ -44,6 +44,6 @@ Status: lokal verifiziert und zur unabhängigen Review vorbereitet. Im Repositor
 ist nur der Autor als Collaborator verfügbar; eine unabhängige Review liegt noch
 nicht vor. Integration und Issue-Schließung bleiben bis zur Review offen.
 
-Nachtrag vom 14.10.2026: [PR #16](https://github.com/maschin96/Firmantis/pull/16)
+Nachtrag vom 14.10.2026: [PR #16](https://github.com/maschin96/Femantis/pull/16)
 wurde als Commit `cc6cb25` in `main` integriert; Issue #2 ist geschlossen.
 Die Prüfziffern und der Status oben beschreiben den Stand vor dieser Integration.

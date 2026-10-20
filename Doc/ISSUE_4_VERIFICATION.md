@@ -1,6 +1,6 @@
 # Issue #4: Bewusster Modellneustart
 
-Bezug: [Issue #4](https://github.com/maschin96/Firmantis/issues/4), Basis `44360d2`,
+Bezug: [Issue #4](https://github.com/maschin96/Femantis/issues/4), Basis `44360d2`,
 14.10.2026, macOS/Apple Silicon. Eigenständiger Schnitt ohne Abhängigkeit von Issue #2.
 
 ## Verhalten
@@ -42,6 +42,6 @@ Status: lokal verifiziert und zur unabhängigen Review vorbereitet. Eine unabhä
 Review steht noch aus; im Repository ist nur der Autor als Collaborator verfügbar.
 Integration und Issue-Schließung bleiben bis zur Review offen.
 
-Nachtrag vom 14.10.2026: [PR #17](https://github.com/maschin96/Firmantis/pull/17)
+Nachtrag vom 14.10.2026: [PR #17](https://github.com/maschin96/Femantis/pull/17)
 wurde als Commit `6a74f1d` in `main` integriert; Issue #4 ist geschlossen.
 Die Prüfziffern und der Status oben beschreiben den Stand vor dieser Integration.

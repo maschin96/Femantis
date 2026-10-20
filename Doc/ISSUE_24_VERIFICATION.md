@@ -1,6 +1,6 @@
 # Issue #24: Liquid-Glass-Design und überarbeitete Benutzerführung
 
-Bezug: [Issue #24](https://github.com/maschin96/Firmantis/issues/24), Basis `0e7c93b`
+Bezug: [Issue #24](https://github.com/maschin96/Femantis/issues/24), Basis `0e7c93b`
 (Branch `codex/6-structured-diagnostics`, PR #22), 19.10.2026, macOS/Apple Silicon,
 FEM-Toolbox 1.4.0.
 

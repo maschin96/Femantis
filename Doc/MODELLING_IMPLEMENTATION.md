@@ -2,7 +2,7 @@
 
 Lokale Arbeitspakete D3/D4 vom 13.10.2026, aufbauend auf dem Netzviewer. Die Toolbox bleibt unverändert. Ziel: stationäre Wärme, Elastizität und Elektrostatik mit dem bestehenden Model-Schema 1; Formulare für isotrope Materialien, Regionen, Randbedingungen und Lasten, zusätzlich erhaltende Bearbeitung der vollständigen Model-Daten. Quadererzeugung dient als einfacher Einstieg, kein CAD-Kern. Der [aktuelle Projektstand](PROJECT_STATUS.md) nennt spätere GitHub-Integration und offene Gates.
 
-Abnahme dieses lokalen Schnitts: analytische lineare Wärme-/Potentialfelder und axialer Zugfall; Preflight-Fehler; portable Speicherung von Entwurf und Ergebnissen; Originalwerte und Einheiten in der Ergebnisdarstellung; Modellrevision und veraltete Ergebnisse; abbrechbarer Python-Solverprozess; echte Desktopabläufe von der Erstellung bis zum wieder geöffneten Ergebnis. Die damalige Aussage, Änderungen seien noch lokal und Repository/Issues erst zuzuordnen, galt vor der Einrichtung von [maschin96/Firmantis](https://github.com/maschin96/Firmantis) am 13.10.2026.
+Abnahme dieses lokalen Schnitts: analytische lineare Wärme-/Potentialfelder und axialer Zugfall; Preflight-Fehler; portable Speicherung von Entwurf und Ergebnissen; Originalwerte und Einheiten in der Ergebnisdarstellung; Modellrevision und veraltete Ergebnisse; abbrechbarer Python-Solverprozess; echte Desktopabläufe von der Erstellung bis zum wieder geöffneten Ergebnis. Die damalige Aussage, Änderungen seien noch lokal und Repository/Issues erst zuzuordnen, galt vor der Einrichtung von [maschin96/Femantis](https://github.com/maschin96/Femantis) am 13.10.2026.
 
 ## Implementierter Stand 0.2.0
 
