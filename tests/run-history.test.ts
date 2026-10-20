@@ -15,6 +15,9 @@ import {
 import { RunCache } from '../src/main/run-cache';
 import { canonicalModel, newModel } from '../src/shared/model';
 import { defaultView, type ModelDocument } from '../src/shared/types';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 let cacheFolder: string;
 let cache: RunCache;
@@ -28,7 +31,7 @@ const projects: string[] = [];
 async function solve(document: ModelDocument, createdAt: string): Promise<RunFiles> {
   const id = randomUUID();
   const directory = await cache.createRunDirectory(id);
-  const result = await calculateModel(process.cwd(), source, document, id, directory);
+  const result = await calculateModel(backend, source, document, id, directory);
   return {
     id,
     directory,
@@ -42,7 +45,7 @@ beforeAll(async () => {
   cacheFolder = await mkdtemp(path.join(tmpdir(), 'femantis-history-cache-'));
   cache = await RunCache.open(path.join(cacheFolder, 'runs'));
   source = { name: 'cantilever.msh', scale: 1, bytes: await readFile('examples/cantilever.msh') };
-  const mesh = await importMesh(process.cwd(), source.bytes, source.name, source.scale);
+  const mesh = await importMesh(backend, source.bytes, source.name, source.scale);
   model = newModel(mesh);
   model.boundary = {
     dirichlet: [
@@ -70,7 +73,7 @@ const maximum = async (run: RunFiles) =>
   Math.max(
     ...(
       await loadCalculation(
-        process.cwd(),
+        backend,
         run.directory,
         run.id,
         run.modelKey,
@@ -115,7 +118,7 @@ describe('Mehrere Berechnungsläufe im portablen Projekt', () => {
     const isolated = await RunCache.open(path.join(cacheFolder, 'isolated'));
     const id = randomUUID();
     const directory = await isolated.createRunDirectory(id);
-    const result = await calculateModel(process.cwd(), source, model, id, directory);
+    const result = await calculateModel(backend, source, model, id, directory);
     const run = {
       id,
       directory,

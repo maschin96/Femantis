@@ -23,6 +23,15 @@ npm start
 
 Eine andere eingerichtete Python-Umgebung lässt sich mit `FEMANTIS_PYTHON=/absoluter/pfad/python` verwenden. Dieser Desktopstand erwartet FEM-Toolbox 1.4.0. Auf Windows liegt die automatisch eingerichtete Runtime unter `.venv/Scripts/python.exe`.
 
+## macOS-Paket (Apple Silicon)
+
+```sh
+npm run package:mac
+npm run test:package
+```
+
+`package:mac` erzeugt `dist/Femantis-<version>-mac-arm64.dmg` mit gebündeltem CPython 3.13.16 und FEM-Toolbox 1.4.0 sowie Build-Manifest und `SHA256SUMS`. Die App benötigt auf dem Zielrechner weder Node.js noch Python oder Internetzugang. Sie ist nur ad hoc signiert, nicht notarisiert, und deshalb kein veröffentlichungsfähiges Release. Paketierungsentscheidung, Smoke-Tests, Blocker und Releasecheckliste: [Auslieferung](Doc/RELEASE.md).
+
 ## Verfügbare Bedienung
 
 - Bauteilaußenhaut, Tet4-/geradkantige Tet10-Netze, Netzkanten und Oberflächenknoten.
@@ -55,11 +64,11 @@ JSON-Übernahme, TOML-Import und Projektöffnung prüfen die für den Editor erf
 
 Drei fertige Beispiele: [Wärmeleitung](examples/heat.toml), [Elastizität](examples/elasticity.toml), [Elektrostatik](examples/electrostatics.toml). Nach **Modell erstellen → TOML öffnen** kann eines gewählt und direkt berechnet werden. Beim Start wird weiterhin das reine Kragträgernetz geladen.
 
-Ungespeicherte Läufe liegen im lokalen Laufcache `.cache/runs/session-<uuid>/` (abweichend über einen absoluten Pfad in `FEMANTIS_RUN_CACHE`). Er ist nicht portabel: Beim Beenden, beim Wechsel des Arbeitsstands und nach dem Speichern werden die Cachekopien gelöscht; nach dem Speichern verweist die Historie auf die Projektkopien. Sitzungen abgestürzter Instanzen entfernt der nächste Start. **Cache bereinigen** löscht zusätzlich Laufordner älterer Versionen (`.cache/runs/<uuid>`); Läufe der Historie und anderer laufender Instanzen bleiben erhalten. Projektordner werden nie bereinigt; ein aus der Historie entfernter gespeicherter Lauf bleibt unter `.files/runs` liegen. Details: [Issue-#7-Nachweis](Doc/ISSUE_7_VERIFICATION.md).
+Ungespeicherte Läufe liegen im lokalen Laufcache `.cache/runs/session-<uuid>/`, in der paketierten App unter `~/Library/Application Support/Femantis/runs/` (abweichend jeweils über einen absoluten Pfad in `FEMANTIS_RUN_CACHE`). Er ist nicht portabel: Beim Beenden, beim Wechsel des Arbeitsstands und nach dem Speichern werden die Cachekopien gelöscht; nach dem Speichern verweist die Historie auf die Projektkopien. Sitzungen abgestürzter Instanzen entfernt der nächste Start. **Cache bereinigen** löscht zusätzlich Laufordner älterer Versionen (`.cache/runs/<uuid>`); Läufe der Historie und anderer laufender Instanzen bleiben erhalten. Projektordner werden nie bereinigt; ein aus der Historie entfernter gespeicherter Lauf bleibt unter `.files/runs` liegen. Details: [Issue-#7-Nachweis](Doc/ISSUE_7_VERIFICATION.md).
 
 Projektdateien mit Modellen/Ergebnissen verwenden Desktop-Schema 2; reine Viewer-Projekte mit Schema 1 bleiben lesbar. Bei Weitergabe Projektdatei und gesamten `.files`-Ordner zusammen kopieren. Laufordner enthalten Eingabesnapshot, Netz sowie das unveränderte VTU/JSON-Ergebnisbündel der Toolbox. Neue Läufe speichern außerdem `model.json` und `run.json`: Der SHA-256-Wert des Laufnachweises steht im Projekt und bindet Originalnetz samt Maßstab, gerechnete Modellrevision, Eingabesnapshot und Ergebnisdateien. Beim Öffnen werden auch Netzgeometrie, Topologie, Feldgrößen und Physik gegen den Lauf geprüft. Veränderte oder fehlende Laufdateien erfordern eine Neuberechnung. Ältere Schema-2-Läufe ohne Laufnachweis bleiben lesbar, werden aber sichtbar als **Zuordnung nicht verifiziert** gekennzeichnet; Speichern stuft sie nicht nachträglich hoch. Der Nachweis schützt die Zuordnung innerhalb eines unveränderten Projekts; er ist keine Signatur gegen eine gemeinsame bewusste Neuschreibung von Projektdatei und allen Laufdateien.
 
-Der erste Rechenumfang ist linear und stationär. Tet10-Rechnungen sind über die vorhandenen Toolbox-Operatoren möglich; die nodale Viewer-Darstellung auf Triangle6-Teilflächen bleibt eine ausdrücklich lineare Darstellungsapproximation, keine exakte quadratische Feldinterpolation. Schwerpunktfelder sind gekennzeichnet. CAD-Bearbeitung, gekoppelte Physiken, Zeit-/Frequenzserien und Installationspakete folgen separat.
+Der erste Rechenumfang ist linear und stationär. Tet10-Rechnungen sind über die vorhandenen Toolbox-Operatoren möglich; die nodale Viewer-Darstellung auf Triangle6-Teilflächen bleibt eine ausdrücklich lineare Darstellungsapproximation, keine exakte quadratische Feldinterpolation. Schwerpunktfelder sind gekennzeichnet. CAD-Bearbeitung, gekoppelte Physiken, Zeit-/Frequenzserien sowie signierte und notarisierte Installationspakete folgen separat.
 
 ## Prüfungen
 
@@ -83,6 +92,7 @@ Die GitHub-Prüfjobs sind unter [CI](Doc/CI.md) beschrieben.
 - [UI-, Architektur- und Umsetzungsplan](Doc/ELECTRON_UI_PLAN.md)
 - [Umsetzungsumfang und Abnahme](Doc/IMPLEMENTATION.md)
 - [Modellerstellung und Berechnungsnachweise](Doc/MODELLING_IMPLEMENTATION.md)
+- [Auslieferung und Releasecheckliste](Doc/RELEASE.md)
 - [Beispielnetze und Herkunft](examples/README.md)
 
-Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Windows/Linux und eine mitgelieferte Python-Runtime sind noch keine geprüften Auslieferungsziele.
+Basis: [maschin96/FEM-Toolbox](https://github.com/maschin96/FEM-Toolbox), Version 1.4.0, Commit `baae07f088a87ce6e256af3c5855a3b110d0f17a`. Produktname: Femantis; Python-Import: `fem_toolbox`. Erstentwicklung auf macOS/Apple Silicon. Ein ad-hoc-signiertes macOS/Apple-Silicon-Paket mit gebündelter Python-Runtime ist lokal und offline geprüft ([#10](https://github.com/maschin96/Femantis/issues/10)); Developer-ID-Signierung und Notarisierung fehlen. Windows/Linux sind noch keine geprüften Auslieferungsziele.

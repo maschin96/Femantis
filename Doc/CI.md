@@ -7,8 +7,9 @@
 | Frontend · Node 22 | `ubuntu-24.04` | `npm ci`, `npm run build` einschließlich Typprüfung |
 | Backend · Python 3.11/3.12/3.13 | `ubuntu-24.04`, Matrix ohne `fail-fast` | `npm ci`, `npm run setup:backend` (öffentliche Toolbox am festen Commit), unter 3.13 Prüfung der installierten Versionen gegen `backend/constraints.txt`, `npm run test:backend`, `npm test` (Vitest einschließlich echter Python-Läufe) |
 | Desktop · macOS 15 | `macos-15` (arm64), Python 3.13 | `npm ci`, Toolbox-Setup, `npm run build`, `npm run test:desktop` mit echtem Electron/WebGL; bei Fehlern `test-results/` sieben Tage als Artefakt `desktop-test-results` |
+| Package · macOS 15 | `macos-15` (arm64), ohne `setup-python` und `.venv` | `npm ci`, `npm run package:mac` (gepinntes CPython, Toolbox, Lizenzen, Ad-hoc-Signatur, DMG), Ausgabe von Build-Manifest und `SHA256SUMS`, `npm run test:package` normal und mit `FEMANTIS_PACKAGE_SANDBOX=1` (offline); bei Fehlern `test-results/` als `package-test-results`. Das DMG wird nicht hochgeladen ([Auslieferung](RELEASE.md)). |
 
-Backend- und Desktopjobs warten auf den Frontend-Job und laufen nur für Branches
+Backend-, Desktop- und Paketjobs warten auf den Frontend-Job und laufen nur für Branches
 dieses Repositorys und für `main`. Bei fremden Fork-PRs läuft nur die
 Frontend-Prüfung. Ob Fork-Code auch auf Backend- und macOS-Runnern laufen soll,
 ist eine eigene Entscheidung.
@@ -56,5 +57,5 @@ Lauf 39371920834 (`main` @ `7d1de63`, 20.10.2026):
 
 Eine separate Repository-Einstellung. Am 20.10.2026 meldete die GitHub-API für
 `main` „Branch not protected“ (HTTP 404). Erforderliche Checks werden also nicht
-erzwungen; ein PR ist erst integrierbar, wenn alle fünf Jobs grün sind. Ob Checks
+erzwungen; ein PR ist erst integrierbar, wenn alle Jobs (seit #10 sechs) grün sind. Ob Checks
 verpflichtend werden sollen, entscheidet der Repository-Eigentümer.

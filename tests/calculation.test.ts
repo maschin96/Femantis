@@ -7,6 +7,9 @@ import { importMesh, calculateModel, loadCalculation } from '../src/main/backend
 import { newModel } from '../src/shared/model';
 import { saveProjectFile, openProjectFile, sourceKey } from '../src/main/project-store';
 import { defaultView } from '../src/shared/types';
+import { developmentBackend } from '../src/main/runtime';
+
+const backend = developmentBackend(process.cwd());
 
 describe('Berechnung, Wiederöffnung und Abbruch', () => {
   it('berechnet ein lineares Temperaturfeld und speichert Entwurf und Ergebnis portabel', async () => {
@@ -17,7 +20,7 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
         bytes: await readFile('examples/cantilever.msh'),
         scale: 1,
       };
-      const mesh = await importMesh(process.cwd(), source.bytes, source.name, 1);
+      const mesh = await importMesh(backend, source.bytes, source.name, 1);
       const model = newModel(mesh);
       model.boundary = {
         dirichlet: [
@@ -29,7 +32,7 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
       const runDir = path.join(directory, 'run');
       await mkdir(runDir);
       const phases: string[] = [];
-      const result = await calculateModel(process.cwd(), source, model, runId, runDir, {
+      const result = await calculateModel(backend, source, model, runId, runDir, {
         onPhase: (e) => phases.push(e.phase),
       });
       expect(phases).toEqual(['validating', 'solving', 'exporting']);
@@ -48,7 +51,7 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
       expect(opened.model).toEqual(model);
       expect(opened.run?.id).toBe(runId);
       const loaded = await loadCalculation(
-        process.cwd(),
+        backend,
         opened.run!.directory,
         runId,
         opened.run!.modelKey,
@@ -68,12 +71,12 @@ describe('Berechnung, Wiederöffnung und Abbruch', () => {
         bytes: await readFile('examples/cantilever.msh'),
         scale: 1,
       };
-      const mesh = await importMesh(process.cwd(), source.bytes, source.name, 1);
+      const mesh = await importMesh(backend, source.bytes, source.name, 1);
       const model = newModel(mesh);
       model.boundary = { dirichlet: [{ field: 'T', set: 'Einspannung', value: 300, unit: 'K' }] };
       const controller = new AbortController();
       await expect(
-        calculateModel(process.cwd(), source, model, randomUUID(), directory, {
+        calculateModel(backend, source, model, randomUUID(), directory, {
           signal: controller.signal,
           onPhase: () => controller.abort(),
         }),

@@ -14,6 +14,7 @@ import type {
 import { sealRun, sourceKey, verifyRunFiles, type MeshSource } from './project-store';
 import { canonicalModel } from '../shared/model';
 import { DiagnosticError, diagnosticFromBackend } from '../shared/diagnostics';
+import type { BackendRuntime } from './runtime';
 
 const count = z
   .number()
@@ -50,19 +51,16 @@ const manifestSchema = z.object({
 });
 
 export async function requestBackend(
-  root: string,
+  backend: BackendRuntime,
   action: string,
   data: Record<string, unknown> = {},
   options: { signal?: AbortSignal; onPhase?: (event: JobEvent) => void; timeout?: number } = {},
 ): Promise<unknown> {
   if (options.signal?.aborted) throw new Error('Berechnung abgebrochen.');
-  const python =
-    process.env.FEMANTIS_PYTHON ||
-    path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
   const id = randomUUID();
   return new Promise((resolve, reject) => {
-    const child = spawn(python, [path.join(root, 'backend/adapter.py')], {
-      cwd: root,
+    const child = spawn(backend.python, [...backend.pythonArgs, backend.adapter], {
+      cwd: backend.cwd,
       windowsHide: true,
       stdio: 'pipe',
     });
@@ -88,13 +86,7 @@ export async function requestBackend(
     );
     const abort = () => fail(new Error('Berechnung abgebrochen.'));
     options.signal?.addEventListener('abort', abort, { once: true });
-    child.on('error', () =>
-      fail(
-        new Error(
-          'Python-Umgebung nicht verfügbar. Bitte npm run setup:backend ausführen oder FEMANTIS_PYTHON setzen.',
-        ),
-      ),
-    );
+    child.on('error', () => fail(new Error(backend.missingRuntime)));
     child.stdin.on('error', () => fail(new Error('Die Python-Anbindung wurde unterbrochen.')));
     child.stdout.on('data', (chunk: Buffer) => {
       received += chunk.length;
@@ -235,7 +227,7 @@ async function resultPacket(
   };
 }
 export async function calculateModel(
-  root: string,
+  backend: BackendRuntime,
   source: MeshSource,
   document: ModelDocument,
   runId: string,
@@ -250,7 +242,7 @@ export async function calculateModel(
     mesh: { path: path.basename(filename), length_scale_to_m: source.scale },
   };
   const raw = await requestBackend(
-    root,
+    backend,
     'solveModel',
     { path: filename, scale: source.scale, document: snapshot, outputDir: directory },
     { ...options, timeout: 600_000 },
@@ -265,7 +257,7 @@ export async function calculateModel(
   return resultPacket(directory, raw, runId, modelKey, true, provenanceSha256);
 }
 export async function loadCalculation(
-  root: string,
+  backend: BackendRuntime,
   directory: string,
   runId: string,
   modelKey: string,
@@ -281,7 +273,7 @@ export async function loadCalculation(
     return await withMeshInput(source, async (filename) =>
       resultPacket(
         temporary,
-        await requestBackend(root, 'readResult', {
+        await requestBackend(backend, 'readResult', {
           directory,
           outputDir: temporary,
           path: filename,
@@ -299,7 +291,7 @@ export async function loadCalculation(
   }
 }
 
-export async function backendStatus(root: string): Promise<BackendStatus> {
+export async function backendStatus(backend: BackendRuntime): Promise<BackendStatus> {
   try {
     const result = z
       .object({
@@ -308,7 +300,7 @@ export async function backendStatus(root: string): Promise<BackendStatus> {
         toolboxVersion: z.string().optional(),
         message: z.string().optional(),
       })
-      .parse(await requestBackend(root, 'capabilities'));
+      .parse(await requestBackend(backend, 'capabilities'));
     if (result.available && result.toolboxVersion !== '1.4.0')
       return {
         ...result,
@@ -332,7 +324,7 @@ export function importTimeout(bytes: number): number {
 }
 
 export async function importMesh(
-  root: string,
+  backend: BackendRuntime,
   source: Buffer,
   name: string,
   scale: number,
@@ -343,7 +335,7 @@ export async function importMesh(
     await writeFile(sourcePath, source);
     const manifest = manifestSchema.parse(
       await requestBackend(
-        root,
+        backend,
         'importMesh',
         { path: sourcePath, scale, outputDir: directory },
         { timeout: importTimeout(source.length) },
