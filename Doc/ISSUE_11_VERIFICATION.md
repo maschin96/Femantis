@@ -35,6 +35,11 @@ Im ersten PR-Lauf (39380595984) zusätzlich gefunden:
 | Interne Containment-Prüfungen übergaben `path.relative(...)` an `resolveMeshPath`, das Backslashes ablehnt | Unter Windows ließen sich Projekte weder speichern noch öffnen (18 Vitest-Tests rot, Desktop-Speicherabläufe rot). | `assertInside` prüft aufgelöste native Pfade mit den Trennzeichen der Plattform; `resolveMeshPath` bleibt für die portablen `/`-Pfade der Projektdatei zuständig. Test mit `path.win32`-Semantik. |
 | WebGL unter Xvfb | Chromium setzt Software-OpenGL (Mesa llvmpipe) für WebGL auf die Blockliste; jeder Viewer-Start scheiterte. | Nur die Desktoptests des Linux-Jobs starten Electron mit `--ignore-gpu-blocklist` (`FEMANTIS_TEST_CHROMIUM_ARGS`). Die App selbst ist unverändert: Ohne GPU-Treiber meldet sie unter Linux weiterhin, dass die 3D-Ansicht nicht starten konnte. |
 
+Im zweiten PR-Lauf (39381586323, `67ce986`) waren Backend und Desktop unter
+Windows 2025 grün, Ubuntu 24.04 mit 25 von 26 Desktoptests. Rot war nur der mit #9
+nach `main` gekommene `tests/desktop/tet10.spec.ts`, der die Linux-Schalter noch
+nicht verwendete. Er ist nach dem Merge von `main` angepasst.
+
 Plattformneutral waren bereits: der Interpreterpfad der App (`Scripts/python.exe`),
 die Projektpfade mit `/` samt Ablehnung von Backslashes und absoluten
 Windows-Pfaden, `realpath`-/Symlinkprüfungen, atomares Speichern per `rename`,
