@@ -1,9 +1,10 @@
 import type { ResultPacket, ResultField } from '../shared/types';
-import { fieldLabel } from './viewer/fields';
+import { fieldLabel, interpolationLabel } from './viewer/fields';
 import { NumericInput } from './ModelEditor';
 const display = (v: number) => v.toLocaleString('de-AT', { maximumSignificantDigits: 7 });
 interface Props {
   result: ResultPacket;
+  cellType: 'tetra4' | 'tetra10';
   field: ResultField;
   component: string;
   limits: [number, number];
@@ -78,9 +79,7 @@ export function ResultsPanel(props: Props) {
         )}
       </div>
       <div className="field-caption">
-        {props.field.association === 'point'
-          ? 'Knotenwerte · lineare Darstellungsinterpolation'
-          : 'Elementwerte · ohne Glättung'}
+        {interpolationLabel(props.cellType, props.field, props.component)}
         {props.field.atCentroid ? ' · Schwerpunktwerte' : ''}
         {props.factor > 0 ? ` · Geometrie x + ${props.factor} · u` : ''}
       </div>

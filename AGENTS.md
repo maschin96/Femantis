@@ -46,8 +46,9 @@ only when relevant. For Codex instruction discovery, see the
   Gmsh internal indices must not be presented as original IDs.
 - Solver inputs use SI units; preserve the documented m/mm import conversion and
   units in forms and results. GPU centering and deformation are display operations
-  and must not change numerical inputs. Tet10 visualization uses linear
-  interpolation on subdivided faces and must remain identified as an approximation.
+  and must not change numerical inputs. Tet10 nodal components use exact Triangle6
+  (quadratic) interpolation on straight-edged faces (#9); Tet10 magnitudes interpolate
+  nodal magnitudes and must remain identified as an approximation.
 - Current modelling covers stationary heat, linear elasticity, and electrostatics
   with Toolbox Model schema 1. Do not imply that CAD, coupled/transient solvers,
   or installers are implemented without implementing and verifying them.

@@ -19,6 +19,9 @@ function measured<T>(name: string, action: () => T): T {
   }
 }
 
+/** Viridis after scalar interpolation; clipping happens per fragment (expects `value`). */
+const viridis = `float t=clamp(value,0.0,1.0);vec3 a=vec3(0.0578054,0.0003035,0.0886556);vec3 b=vec3(0.0437350,0.0843762,0.2581829);vec3 c0=vec3(0.0152085,0.2831487,0.2622507);vec3 d=vec3(0.1119324,0.5840784,0.1221388);vec3 e=vec3(0.9822506,0.7991027,0.0185002);vec3 col=t<0.25?mix(a,b,t*4.0):t<0.5?mix(b,c0,(t-0.25)*4.0):t<0.75?mix(c0,d,(t-0.5)*4.0):mix(d,e,(t-0.75)*4.0);gl_FragColor=vec4(col,1.0);\n#include <colorspace_fragment>\n`;
+
 export class Viewport {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -61,6 +64,8 @@ export class Viewport {
   private radius = 1;
   private rendered: Uint32Array = new Uint32Array(0);
   private displayIndex: Int32Array = new Int32Array(0);
+  private displayCoordinates: Float32Array = new Float32Array(0);
+  private rowsPerTriangle = 1;
   private palette: Float32Array;
   private selected: number | null = null;
   private view: ViewState;
@@ -75,7 +80,16 @@ export class Viewport {
   private fieldMaterial = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
     vertexShader: `attribute float femValue; varying float value; void main(){value=femValue;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-    fragmentShader: `varying float value;void main(){float t=clamp(value,0.0,1.0);vec3 a=vec3(0.0578054,0.0003035,0.0886556);vec3 b=vec3(0.0437350,0.0843762,0.2581829);vec3 c=vec3(0.0152085,0.2831487,0.2622507);vec3 d=vec3(0.1119324,0.5840784,0.1221388);vec3 e=vec3(0.9822506,0.7991027,0.0185002);vec3 col=t<0.25?mix(a,b,t*4.0):t<0.5?mix(b,c,(t-0.25)*4.0):t<0.75?mix(c,d,(t-0.5)*4.0):mix(d,e,(t-0.75)*4.0);gl_FragColor=vec4(col,1.0);\n#include <colorspace_fragment>\n }`,
+    fragmentShader: `varying float value;void main(){${viridis}}`,
+  });
+  /**
+   * Tet10 nodal fields (#9): face-local area coordinates are affine on the flat face, so
+   * evaluating the Triangle6 shape functions per fragment reproduces the quadratic field.
+   */
+  private quadraticMaterial = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    vertexShader: `attribute vec3 femLambda; attribute vec3 femCorner; attribute vec3 femMid; varying vec3 l; varying vec3 c; varying vec3 m; void main(){l=femLambda;c=femCorner;m=femMid;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader: `varying vec3 l; varying vec3 c; varying vec3 m; void main(){vec3 nc=l*(2.0*l-1.0);vec3 nm=4.0*vec3(l.x*l.y,l.y*l.z,l.z*l.x);float value=dot(nc,c)+dot(nm,m);${viridis}}`,
   });
 
   constructor(
@@ -184,19 +198,6 @@ export class Viewport {
     });
     this.onPick(hit?.faceIndex != null ? this.rendered[hit.faceIndex] : null);
   };
-  private vertex(index: number): number[] {
-    return [
-      this.mesh.positions[index * 3] -
-        this.origin.x +
-        (this.deformation?.[index * 3] || 0) * this.deformationFactor,
-      this.mesh.positions[index * 3 + 1] -
-        this.origin.y +
-        (this.deformation?.[index * 3 + 1] || 0) * this.deformationFactor,
-      this.mesh.positions[index * 3 + 2] -
-        this.origin.z +
-        (this.deformation?.[index * 3 + 2] || 0) * this.deformationFactor,
-    ];
-  }
   private replaceGeometry(
     object: THREE.Mesh | THREE.LineSegments | THREE.Points,
     geometry: THREE.BufferGeometry,
@@ -229,10 +230,22 @@ export class Viewport {
     });
     this.rendered = display.rendered;
     this.displayIndex = display.displayIndex;
+    this.displayCoordinates = display.coordinates;
+    this.rowsPerTriangle = display.rowsPerTriangle;
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(display.coordinates, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(display.colors, 3));
     geometry.setAttribute('femValue', new THREE.BufferAttribute(display.femValues, 1));
+    if (display.quadratic) {
+      geometry.setAttribute('femLambda', new THREE.BufferAttribute(display.quadratic.lambda, 3));
+      geometry.setAttribute('femCorner', new THREE.BufferAttribute(display.quadratic.corners, 3));
+      geometry.setAttribute('femMid', new THREE.BufferAttribute(display.quadratic.midsides, 3));
+    }
+    this.surface.material = !this.resultField
+      ? this.standardMaterial
+      : display.quadratic
+        ? this.quadraticMaterial
+        : this.fieldMaterial;
     geometry.computeVertexNormals();
     this.replaceGeometry(this.surface, geometry);
     const edgeGeometry = new THREE.BufferGeometry();
@@ -289,7 +302,6 @@ export class Viewport {
     this.gpuValues = gpu;
     this.deformation = displacement;
     this.deformationFactor = factor;
-    this.surface.material = field ? this.fieldMaterial : this.standardMaterial;
     this.setView(this.view);
   }
 
@@ -302,10 +314,12 @@ export class Viewport {
     const geometry = new THREE.BufferGeometry();
     const shown = triangle !== null && this.displayIndex[triangle] >= 0;
     if (shown) {
+      // All display rows of the mesh triangle (four when a Tet10 face is refined).
+      const first = this.displayIndex[triangle] * 9;
       geometry.setAttribute(
         'position',
-        new THREE.Float32BufferAttribute(
-          [0, 1, 2].flatMap((local) => this.vertex(this.mesh.triangles[triangle * 3 + local])),
+        new THREE.BufferAttribute(
+          this.displayCoordinates.slice(first, first + this.rowsPerTriangle * 9),
           3,
         ),
       );
@@ -354,6 +368,7 @@ export class Viewport {
     this.orientation.dispose();
     this.standardMaterial.dispose();
     this.fieldMaterial.dispose();
+    this.quadraticMaterial.dispose();
     this.renderer.domElement.remove();
   }
 }

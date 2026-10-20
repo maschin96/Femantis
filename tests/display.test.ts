@@ -130,3 +130,141 @@ describe('Anzeigegeometrie', () => {
     expect(cube.positions[0]).toBe(1e6);
   });
 });
+
+/**
+ * One straight-edged Triangle6 face in the X/Z plane, split into the adapter's four
+ * display triangles (n0,n3,n5), (n3,n1,n4), (n5,n4,n2), (n3,n4,n5).
+ */
+const faceXZ = [
+  [-1, -1],
+  [1, -1],
+  [-1, 1],
+  [0, -1],
+  [0, 0],
+  [-1, 0],
+];
+const tet10Face = {
+  cellType: 'tetra10',
+  pointCount: 6,
+  cellCount: 1,
+  triangleCount: 4,
+  positions: new Float64Array(faceXZ.flatMap(([x, z]) => [x, 0, z])),
+  triangles: new Uint32Array([0, 3, 5, 3, 1, 4, 5, 4, 2, 3, 4, 5]),
+  triangleOwners: new Uint32Array([0, 0, 0, 0]),
+  triangleFacets: new Int32Array([-1, -1, -1, -1]),
+  triangleFaceNodes: new Uint32Array(Array.from({ length: 4 }, () => [0, 1, 2, 3, 4, 5]).flat()),
+  groups: [],
+} as unknown as MeshPacket;
+const faceInput = (patch: Partial<Parameters<typeof buildDisplay>[0]> = {}) => ({
+  mesh: tet10Face,
+  view: defaultView(),
+  origin: [0, 0, 0] as [number, number, number],
+  palette: cellPalette(tet10Face),
+  ...patch,
+});
+/** Independent Triangle6 shape functions in area coordinates (corners, then edges 01, 12, 20). */
+const shape = ([a, b, c]: number[]) => [
+  a * (2 * a - 1),
+  b * (2 * b - 1),
+  c * (2 * c - 1),
+  4 * a * b,
+  4 * b * c,
+  4 * c * a,
+];
+/** Display position and field value at local weights w of a display row. */
+function quadraticAt(display: ReturnType<typeof buildDisplay>, row: number, w: number[]) {
+  const q = display.quadratic!;
+  const lambda = [0, 1, 2].map((axis) =>
+    w.reduce((sum, weight, vertex) => sum + weight * q.lambda[row * 9 + vertex * 3 + axis], 0),
+  );
+  const nodal = [
+    ...q.corners.slice(row * 9, row * 9 + 3),
+    ...q.midsides.slice(row * 9, row * 9 + 3),
+  ];
+  const value = shape(lambda).reduce((sum, n, k) => sum + n * nodal[k], 0);
+  const point = [0, 2].map((axis) =>
+    w.reduce(
+      (sum, weight, vertex) => sum + weight * display.coordinates[row * 9 + vertex * 3 + axis],
+      0,
+    ),
+  );
+  return { value, point };
+}
+const weights = [
+  [1 / 3, 1 / 3, 1 / 3],
+  [0.6, 0.3, 0.1],
+  [0.05, 0.15, 0.8],
+];
+
+describe('Quadratische Tet10-Felddarstellung', () => {
+  const fields: [string, (x: number, z: number) => number][] = [
+    ['linear', (x, z) => 2 + 3 * x - 0.5 * z],
+    ['quadratisch', (x, z) => 1 + x - 2 * z + 0.7 * x * x - 1.3 * x * z + 0.4 * z * z],
+  ];
+  it.each(fields)('reproduziert ein %ses Referenzfeld exakt', (_, f) => {
+    const values = new Float64Array(faceXZ.map(([x, z]) => f(x, z)));
+    const display = buildDisplay(
+      faceInput({ field: { association: 'point', values, gpu: new Float32Array(values) } }),
+    );
+    expect(display.rendered.length).toBe(4);
+    for (let row = 0; row < 4; row++)
+      for (const w of weights) {
+        const { value, point } = quadraticAt(display, row, w);
+        expect(value).toBeCloseTo(f(point[0], point[1]), 5);
+      }
+  });
+
+  it('weicht von der bisherigen linearen Teilflächeninterpolation ab', () => {
+    // Corners 0, midsides 1: exact value 4/3 at the face centroid, linear sub-triangle 1.
+    const values = new Float64Array([0, 0, 0, 1, 1, 1]);
+    const display = buildDisplay(
+      faceInput({ field: { association: 'point', values, gpu: new Float32Array(values) } }),
+    );
+    const centre = display.rendered.indexOf(3);
+    const linear = [0, 1, 2].reduce((sum, v) => sum + display.femValues[centre * 3 + v] / 3, 0);
+    expect(linear).toBeCloseTo(1, 6);
+    expect(quadraticAt(display, centre, [1 / 3, 1 / 3, 1 / 3]).value).toBeCloseTo(4 / 3, 6);
+  });
+
+  it('entfernt die ganze Fläche bei einem inaktiven Knoten', () => {
+    const values = new Float64Array([1, 2, 3, NaN, 5, 6]);
+    const display = buildDisplay(
+      faceInput({ field: { association: 'point', values, gpu: new Float32Array(values) } }),
+    );
+    // Sub-triangles (n5,n4,n2) do not touch n3, yet the face's quadratic field needs all six.
+    expect(display.rendered.length).toBe(0);
+  });
+
+  it('lässt Zellwerte und Tet4 ohne quadratische Attribute', () => {
+    const cell = buildDisplay(
+      faceInput({
+        field: { association: 'cell', values: new Float64Array([4]), gpu: new Float32Array([0.5]) },
+      }),
+    );
+    expect(cell.quadratic).toBeUndefined();
+    expect([...cell.femValues]).toEqual(Array(12).fill(0.5));
+    const values = new Float64Array(8).fill(1);
+    expect(
+      buildDisplay(
+        input({ field: { association: 'point', values, gpu: new Float32Array(values) } }),
+      ).quadratic,
+    ).toBeUndefined();
+  });
+
+  it('verfeinert die Verformungsanzeige und trifft die quadratische Verschiebung exakt', () => {
+    // u_y(x, z) = 0.1 x z + 0.2 z² (out of plane); nodal values sampled from it.
+    const uy = (x: number, z: number) => 0.1 * x * z + 0.2 * z * z;
+    const deformation = new Float64Array(faceXZ.flatMap(([x, z]) => [0, uy(x, z), 0]));
+    const display = buildDisplay(faceInput({ deformation, factor: 3 }));
+    expect(display.rendered.length).toBe(16);
+    expect(display.rowsPerTriangle).toBe(4);
+    expect([...display.displayIndex]).toEqual([0, 4, 8, 12]);
+    expect([...new Set(display.rendered)]).toEqual([0, 1, 2, 3]);
+    for (let vertex = 0; vertex < display.coordinates.length / 3; vertex++) {
+      const [x, y, z] = display.coordinates.slice(vertex * 3, vertex * 3 + 3);
+      expect(y).toBeCloseTo(3 * uy(x, z), 6);
+    }
+    // Without deformation the flat face keeps its four display triangles.
+    expect(buildDisplay(faceInput()).rendered.length).toBe(4);
+  });
+});
