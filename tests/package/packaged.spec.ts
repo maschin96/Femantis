@@ -234,6 +234,8 @@ test('meldet ein ungültiges Netz verständlich und bleibt bedienbar', async () 
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
   }, filename);
   const before = await page.locator('.message.error').count();
+  // The import command lives on the mesh tab of the ribbon (#36).
+  await page.getByRole('button', { name: /01 Netz/ }).click();
   await page.getByRole('button', { name: 'Netz öffnen', exact: true }).click();
   await expect(page.locator('.message.error')).toHaveCount(before + 1);
   await expect(
