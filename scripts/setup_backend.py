@@ -1,5 +1,7 @@
 """Install the frozen public Toolbox snapshot; no GitHub login is required."""
+from importlib import metadata
 from pathlib import Path
+import re
 import subprocess
 import sys
 import venv
@@ -11,7 +13,47 @@ ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = f"https://codeload.github.com/maschin96/FEM-Toolbox/tar.gz/{COMMIT}"
 
 
+def _normalized(name):
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def constraint_mismatches(constraints, version_of):
+    """Differences between `name==version` pins and installed versions (PEP 503 names)."""
+    mismatches = []
+    for line in constraints.splitlines():
+        requirement = line.split("#", 1)[0].strip()
+        if not requirement:
+            continue
+        name, separator, expected = requirement.partition("==")
+        if not separator or not expected.strip():
+            raise ValueError(f"Constraint ohne exakte Version: {requirement}")
+        name, expected = _normalized(name.strip()), expected.strip()
+        installed = version_of(name)
+        if installed is None:
+            mismatches.append(f"{name}: nicht installiert, erwartet {expected}")
+        elif installed != expected:
+            mismatches.append(f"{name}: installiert {installed}, erwartet {expected}")
+    return mismatches
+
+
+def check_constraints():
+    """Run inside .venv: fail when the environment deviates from backend/constraints.txt."""
+    def version_of(name):
+        try:
+            return metadata.version(name)
+        except metadata.PackageNotFoundError:
+            return None
+
+    mismatches = constraint_mismatches((ROOT / "backend/constraints.txt").read_text(encoding="utf-8"), version_of)
+    if mismatches:
+        raise SystemExit("Abweichung von backend/constraints.txt:\n" + "\n".join(mismatches))
+    print("Alle Versionen aus backend/constraints.txt sind installiert.")
+
+
 def main():
+    if sys.argv[1:] == ["--check-constraints"]:
+        check_constraints()
+        return
     if not (3, 11) <= sys.version_info[:2] < (3, 14):
         raise SystemExit("Python 3.11–3.13 wird benötigt.")
     environment = ROOT / ".venv"

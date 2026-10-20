@@ -61,4 +61,8 @@ Windows/Linux wurden nicht geprüft. GitHub Actions starten wegen der in
 [CI.md](CI.md) dokumentierten Billing-Sperre weiterhin keine Runner; es gibt
 keinen CI-Nachweis.
 
+Nachtrag vom 20.10.2026: Nach Aufhebung der Sperre scheiterten die ersten Läufe
+von PR #22 am entfallenen Toolbox-Lesesecret; der letzte PR-Lauf 39286339091
+(`0e7c93b`) war mit allen fünf Jobs grün. Siehe [CI.md](CI.md).
+
 Status: lokal verifiziert, unabhängige Review steht aus.

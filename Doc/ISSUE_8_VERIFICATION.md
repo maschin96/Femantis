@@ -141,4 +141,9 @@ Farb-/Feldaktualisierung statt Neuaufbau, wenn größere Oberflächen nötig wer
 Nur macOS/Apple Silicon mit 120-Hz-Display; Windows/Linux, schwächere GPUs und
 60-Hz-Displays sind nicht gemessen. Kein CI-Nachweis (Billing-Sperre, [CI.md](CI.md)).
 
+Nachtrag vom 20.10.2026: Diese Aussage war beim Schreiben bereits überholt. Die
+PR-Läufe 39302869360 (`f7ae66d`) und 39371606829 (`a7efa39`) sowie der `main`-Lauf
+39371862896 waren mit allen fünf Jobs grün. Der Viewer-Benchmark läuft bewusst
+nicht in der CI. Siehe [CI.md](CI.md).
+
 Status: lokal verifiziert, unabhängige Review steht aus.

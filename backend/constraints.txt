@@ -1,5 +1,5 @@
 # Numerical dependency versions used for this desktop milestone (Python 3.13).
-# FEM-Toolbox itself is installed from the pinned private GitHub commit.
+# FEM-Toolbox itself is installed from the pinned public GitHub commit.
 numpy==2.5.4
 scipy==1.18.1
 meshio==5.3.5
