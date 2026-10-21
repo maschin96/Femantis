@@ -98,7 +98,9 @@ Signaturfehler auf.
 - Benchmark nicht ausgeführt: keine Änderung an Topologie oder Binärtransfer.
 - CI auf PR #34, Lauf [39415699111](https://github.com/maschin96/Femantis/actions/runs/39415699111):
   alle 9 Jobs grün (Frontend, Backend 3.11/3.12/3.13 und Windows, Desktop macOS/Windows/
-  Ubuntu, Package macOS 15). Der Lauf auf `main` nach dem Merge steht aus.
+  Ubuntu, Package macOS 15). Nach dem Merge auf `main` (`6b86f98`) Lauf
+  [39453629804](https://github.com/maschin96/Femantis/actions/runs/39453629804) grün, ebenso
+  `main` @ `d35c00c` (Lauf [39479661162](https://github.com/maschin96/Femantis/actions/runs/39479661162), Paket 7/7, offline 7/7).
 
 ## Nicht abgedeckt
 
@@ -110,7 +112,7 @@ automatische Updates.
 Status: lokale Übergabe mit Verifikationslücken. Bau, Pfade, Offline-Betrieb,
 Lizenzen einschließlich GPL-3.0-or-later und Checkliste sind lokal belegt.
 PR-CI ist grün. Maschinenübergreifend reproduzierbar ist der Bundle-Inhalt
-(`contentDigest`), nicht die signierten Bytes (`codesign` je macOS-Version). Offen
-sind ein manuell bedienter Zweitrechner und der `main`-Lauf nach dem Merge; Developer-ID/Notarisierung
+(`contentDigest`), nicht die signierten Bytes (`codesign` je macOS-Version). `main`-CI ist nach dem Merge grün. Offen
+ist ein manuell bedienter Zweitrechner; Developer-ID/Notarisierung
 bewusst zurückgestellt.
 Kein Release veröffentlicht.
