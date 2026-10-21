@@ -22,9 +22,11 @@ ist eine eigene Entscheidung.
   werden.
 - `permissions: contents: read` für den `GITHUB_TOKEN`; kein
   `pull_request_target`.
-- Externe Actions sind auf vollständige Commit-SHAs fixiert. Am 20.10.2026 per
-  `git ls-remote --tags` geprüft: `actions/checkout` und `actions/setup-node`
-  v4.4.0, `actions/setup-python` v5.6.0, `actions/upload-artifact` v4.6.2.
+- Externe Actions sind auf vollständige Commit-SHAs fixiert. Am 21.10.2026 per
+  `git ls-remote --tags` geprüft; alle vier Actions laufen mit `node24`
+  (Node 20 ist in GitHub Actions veraltet): `actions/checkout` v7.0.1,
+  `actions/setup-node` v7.1.0, `actions/setup-python` v7.0.0,
+  `actions/upload-artifact` v7.0.2.
   Updates erfolgen bewusst per SHA-Wechsel.
 - Desktop-Artefakte sind reine Fehlerdiagnostik ohne Zugangsdaten.
 
