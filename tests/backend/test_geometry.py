@@ -24,7 +24,9 @@ def write_box_step(path, lengths=(10.0, 20.0, 30.0)):
         f"gmsh.model.occ.addBox(0, 0, 0, *{tuple(lengths)!r}); gmsh.model.occ.synchronize(); "
         "gmsh.write(sys.argv[1]); gmsh.finalize()"
     )
-    subprocess.run([sys.executable, "-c", script, str(path)], capture_output=True, check=True)
+    done = subprocess.run([sys.executable, "-c", script, str(path)], capture_output=True, text=True)
+    if done.returncode != 0:
+        raise RuntimeError(f"STEP-Fixture konnte nicht geschrieben werden:\n{done.stderr[-800:]}")
 
 
 class StepMeshingTests(unittest.TestCase):
