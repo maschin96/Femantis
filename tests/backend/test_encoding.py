@@ -5,7 +5,6 @@ Windows starts Python with a legacy code page (often cp1252) for stdin and for
 non-UTF-8 locale so the same defect is visible on macOS and Linux.
 """
 import json
-import locale
 import os
 from pathlib import Path
 import subprocess
@@ -17,6 +16,31 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 NAME = "Stähl"
+
+
+# Candidate environments for a child Python whose preferred encoding is not UTF-8.
+# Runners rarely install en_US.ISO8859-1; the C locale (ASCII once PEP 538 coercion
+# and UTF-8 mode are off) exists on every POSIX system, and Windows uses its ANSI
+# code page by default.
+FOREIGN_LOCALES = (
+    {"LC_ALL": "en_US.ISO8859-1", "LANG": "en_US.ISO8859-1"},
+    {"LC_ALL": "C", "LANG": "C", "PYTHONCOERCECLOCALE": "0"},
+    {},
+)
+
+
+def foreign_locale_environment():
+    """Return the first environment whose child Python does not prefer UTF-8, or None."""
+    probe = "import locale; print(locale.getpreferredencoding(False))"
+    for overrides in FOREIGN_LOCALES:
+        environment = {**os.environ, **overrides, "PYTHONUTF8": "0"}
+        completed = subprocess.run(
+            [sys.executable, "-c", probe], capture_output=True, env=environment, check=False,
+        )
+        encoding = completed.stdout.decode("ascii", "replace").strip().lower().replace("-", "")
+        if completed.returncode == 0 and encoding and encoding != "utf8":
+            return environment
+    return None
 
 
 def heat_document_text():
@@ -37,13 +61,9 @@ class EncodingTests(unittest.TestCase):
         self.assertIn(NAME, response["result"]["materials"]["T"])
 
     def test_run_snapshot_files_are_utf8_under_a_foreign_locale(self):
-        foreign = "en_US.ISO8859-1"
-        try:
-            previous = locale.setlocale(locale.LC_CTYPE)
-            locale.setlocale(locale.LC_CTYPE, foreign)
-            locale.setlocale(locale.LC_CTYPE, previous)
-        except locale.Error:
-            self.skipTest(f"Locale {foreign} ist auf diesem System nicht installiert.")
+        environment = foreign_locale_environment()
+        if environment is None:
+            self.skipTest("Keine Locale ohne UTF-8 auf diesem System verfügbar.")
         document = tomllib.loads(heat_document_text())
         document.pop("mesh", None)
         with tempfile.TemporaryDirectory() as folder:
@@ -56,7 +76,6 @@ class EncodingTests(unittest.TestCase):
                 mesh = read_mesh({str(ROOT / "examples/cantilever.msh")!r}, 1.0)
                 solve_model(mesh, json.loads(sys.argv[1]), {folder!r})
             """)
-            environment = {**os.environ, "LC_ALL": foreign, "LANG": foreign, "PYTHONUTF8": "0"}
             completed = subprocess.run(
                 [sys.executable, "-c", script, json.dumps(document)],
                 capture_output=True, env=environment, cwd=ROOT, check=False,
