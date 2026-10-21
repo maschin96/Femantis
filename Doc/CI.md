@@ -48,6 +48,7 @@ Version und scheitert bei einer Abweichung.
 | 19.10.2026 16:16 | [39284096757](https://github.com/maschin96/Femantis/actions/runs/39284096757) | Backend/Desktop rot | `TOOLBOX_READ_TOKEN` fehlte; behoben durch die öffentliche Toolbox ([PR #23](https://github.com/maschin96/Femantis/pull/23)) |
 | 19.10.2026 16:28/16:53 | [39285725120](https://github.com/maschin96/Femantis/actions/runs/39285725120) (`main`), 39289329126 (PR #25) | Desktop rot | 5-s-Wartezeit beim kalten Python-/Toolbox-Start; behoben in `966d172` (#24, `tests/desktop/startup.ts`) |
 | seit 19.10.2026 17:00 | u. a. `main` [39294051729](https://github.com/maschin96/Femantis/actions/runs/39294051729), [39371862896](https://github.com/maschin96/Femantis/actions/runs/39371862896), [39371920834](https://github.com/maschin96/Femantis/actions/runs/39371920834); jeweils letzte Läufe der PRs #25–#30 | alle fünf Jobs grün | – |
+| 20.10.2026 19:00 | `main` [39479661162](https://github.com/maschin96/Femantis/actions/runs/39479661162) (`d35c00c`) | alle neun Jobs grün (Plattformen: [#11](ISSUE_11_VERIFICATION.md)) | – |
 
 Lauf 39371920834 (`main` @ `7d1de63`, 20.10.2026):
 

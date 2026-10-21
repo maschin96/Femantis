@@ -55,15 +55,50 @@ Test auf Windows und Linux, wo das Projekt von einer anderen Plattform stammt.
 Die Fixture steht in `.prettierignore`. Eine Umformatierung ihrer JSON-Dateien
 wurde lokal sofort vom Laufnachweis abgewiesen, wie vorgesehen.
 
+## Beobachtete Plattformläufe
+
+`main` @ `d35c00c` (nach #9, #10, #11 und #36), Lauf
+[39479661162](https://github.com/maschin96/Femantis/actions/runs/39479661162),
+20.10.2026, alle neun Jobs grün. Jede Zeile ist ein eigener Check; keine Plattform
+wird aus einer anderen abgeleitet.
+
+| Plattform | Runner-Image | Setup | Ergebnis |
+|---|---|---|---|
+| Ubuntu 24.04 (x64), Python 3.11/3.12/3.13 | `ubuntu-24.04` 20261018.339.1 bzw. 20261012.334.1 | `npm ci`, `npm run setup:backend` (Toolbox 1.4.0 vom gepinnten Commit), unter 3.13 `--check-constraints` | je 36 unittest (1 übersprungen, s. u.), 120 Vitest in 19 Dateien |
+| Ubuntu 24.04 (x64), Desktop | `ubuntu-24.04` 20261012.334.1, Xvfb, Mesa-Software-OpenGL | wie oben, `npm run build` | 30 Electron-/WebGL-Tests in 1,7 min |
+| Windows 2025 (x64), Python 3.13 | `windows-2025-vs2026` 20261007.264.1 | `npm ci`, `npm run setup:backend` über `py`/`python`, `--check-constraints` | 36 unittest (1 übersprungen, s. u.), 120 Vitest in 19 Dateien |
+| Windows 2025 (x64), Desktop | `windows-2025-vs2026` 20261007.264.1 | wie oben, `npm run build` | 30 Electron-/WebGL-Tests in 1,1 min |
+| macOS 15 (arm64), Desktop/Paket | `macos-15-arm64` 20260907.0337.1 | wie oben bzw. gebündeltes CPython | 30 Desktoptests; Paket 7/7, offline 7/7 |
+
+`tests/portable-project.test.ts` (auf macOS gespeichertes Projekt, analytisches Feld)
+lief in jedem Backend-Job grün, also auch unter Windows und Linux.
+
+### Übersprungener Kodierungstest
+
+Im obigen Lauf wurde `test_run_snapshot_files_are_utf8_under_a_foreign_locale` auf
+allen vier Backend-Runnern übersprungen: Er verlangte die Locale
+`en_US.ISO8859-1`, die weder Ubuntu- noch Windows-Runner installieren. Die
+Korrektur für `case.toml` war damit nur auf macOS belegt. Der Test wählt jetzt die
+erste verfügbare Umgebung, in der ein Kind-Python nicht UTF-8 bevorzugt: diese
+Locale, sonst die C-Locale mit `PYTHONCOERCECLOCALE=0` (ASCII, auf jedem
+POSIX-System vorhanden), sonst die Standard-Codepage (Windows). Überspringen bleibt
+nur, wenn keine davon greift.
+
+- Red (macOS, nur C-Locale-Kandidat, `encoding="utf-8"` beim Schreiben von
+  `case.toml` vorübergehend entfernt): `UnicodeEncodeError: 'ascii' codec can't
+  encode character '\xe4'`.
+- Green: derselbe Pfad mit Korrektur grün; `npm run test:backend` 36 Tests OK.
+- CI-Ergebnis dieses Branches: siehe PR.
+
 ## Abnahmekriterien
 
 | Kriterium | Stand |
 |---|---|
 | Ziele und Priorität dokumentiert | erledigt (oben) |
-| Frisches npm-/Python-/Toolbox-Setup je Ziel; portable Test-/Benchmarkaufrufe | Skripte portabel; lokal (macOS) geprüft. Windows/Linux: **ausstehend bis zum PR-Lauf** |
-| Pfade, native Dialoge, relative Projekte, Symlinkschutz, atomares Speichern | über Store-, Provenienz-, Laufhistorien- und Desktoptests auf jeder CI-Plattform. Native Dialoge sind in Tests automatisiert; der echte Systemdialog ist nicht geprüft. **Ausstehend bis zum PR-Lauf** |
-| Solverstart/-abbruch, UTF-8, echtes WebGL | Abbruchtest, `tests/backend/test_encoding.py`, Pixel- und Desktoptests je Plattform; **ausstehend bis zum PR-Lauf** |
-| Ergebnisse je Plattform getrennt; fehlende Runner/GPU zählen nicht | Jeder Plattformjob ist ein eigener Check; Software-WebGL unter Linux ist als solches benannt. |
+| Frisches npm-/Python-/Toolbox-Setup je Ziel; portable Test-/Benchmarkaufrufe | erledigt: Setup und Tests auf frischen Windows-2025- und Ubuntu-24.04-Runnern über dieselben npm-Skripte. Benchmarks laufen über denselben Launcher, werden in der CI aber nicht ausgeführt. |
+| Pfade, native Dialoge, relative Projekte, Symlinkschutz, atomares Speichern | erledigt über Store-, Provenienz-, Laufhistorien-, Portabilitäts- und Desktoptests je Plattform (Junctions unter Windows). Native Dialoge sind wie vorgesehen nur an der Infrastrukturgrenze automatisiert; ein von Hand bedienter Systemdialog unter Windows/Linux ist nicht geprüft. |
+| Solverstart/-abbruch, UTF-8, echtes WebGL | erledigt: Abbruch- und Pixeltests in den Desktopjobs, Kodierungstests im Backendjob (Snapshot-Test ab diesem Branch nicht mehr übersprungen). WebGL unter Linux in Software (Mesa llvmpipe), nicht mit Hardware-GPU. |
+| Ergebnisse je Plattform getrennt; fehlende Runner/GPU zählen nicht | erledigt: Tabelle oben. |
 
 ## Verifikation (lokal, macOS/Apple Silicon)
 
@@ -74,8 +109,11 @@ wurde lokal sofort vom Laufnachweis abgewiesen, wie vorgesehen.
 - Green: `npm test` 97, `npm run test:backend` 34, `npm run build`,
   `npm run test:desktop` 24, `npm run setup:backend` über den neuen Launcher,
   YAML geparst, `git diff --check` und Prettier.
-- Windows und Linux sind lokal nicht verfügbar. Diese Ergebnisse liefert erst der
-  PR-Lauf; bis dahin gilt keine der beiden Plattformen als geprüft.
+- Windows und Linux sind lokal nicht verfügbar; ihre Ergebnisse stammen
+  ausschließlich aus den oben genannten CI-Läufen.
 
-Status: lokale Übergabe mit Lücke. Die Plattformnachweise für Windows und Linux
-stehen aus; die Commit-Referenz lautet deshalb `Refs #11`.
+## Nicht abgedeckt
+
+Hardware-GPU unter Linux, Windows/Linux auf arm64, andere Distributionen, von Hand
+bediente native Dialoge außerhalb macOS, Installer oder gebündelte Runtime für
+Windows/Linux und Benchmarkläufe auf diesen Plattformen.
