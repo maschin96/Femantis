@@ -9,6 +9,7 @@ const api: DesktopAPI = {
   saveProject: (view) => ipcRenderer.invoke('desktop:save', view),
   setDirty: (value) => ipcRenderer.invoke('desktop:dirty', value),
   createBox: (value) => ipcRenderer.invoke('desktop:box', value),
+  importGeometry: (value) => ipcRenderer.invoke('desktop:geometry', value),
   openModel: () => ipcRenderer.invoke('desktop:openModel'),
   exportModel: (value) => ipcRenderer.invoke('desktop:exportModel', value),
   validateModel: (value) => ipcRenderer.invoke('desktop:validate', value),

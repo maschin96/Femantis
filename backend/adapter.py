@@ -162,7 +162,8 @@ def handle_request(request):
     if action == "capabilities":
         try:
             import fem_toolbox
-            return {"available": True, "pythonVersion": platform.python_version(), "toolboxVersion": fem_toolbox.__version__, "protocolVersion": 1}
+            from importlib.util import find_spec
+            return {"available": True, "pythonVersion": platform.python_version(), "toolboxVersion": fem_toolbox.__version__, "protocolVersion": 1, "geometry": find_spec("gmsh") is not None}
         except ImportError:
             return {"available": False, "pythonVersion": platform.python_version(), "message": "FEM-Toolbox fehlt. Bitte npm run setup:backend ausführen."}
     from models import validate_model, solve_model, read_result, dump_toml, create_box
@@ -177,6 +178,9 @@ def handle_request(request):
         mesh = create_box(request["lengths"], request["divisions"])
         write_vtu(Path(request["outputDir"]) / "box.vtu", mesh)
         return {"created": True}
+    if action == "meshGeometry":
+        from geometry import mesh_step
+        return mesh_step(request["path"], request["outputDir"], max_size_m=request.get("maxSize"))
     if action == "readResult":
         expected_mesh = read_mesh(request["path"], float(request.get("scale", 1)))
         return write_artifact(read_result(Path(request["directory"]), expected_mesh=expected_mesh,

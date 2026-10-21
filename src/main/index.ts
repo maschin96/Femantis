@@ -30,6 +30,7 @@ import {
 } from '../shared/types';
 import { assertInside, viewSchema, resolveMeshPath } from '../shared/project';
 import { parseModelDocument } from '../shared/model';
+import { MAX_STEP_BYTES, parseGeometryImport } from '../shared/geometry';
 import { mkdtemp, readFile, writeFile, rm, realpath, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -371,6 +372,43 @@ function setupAPI(): void {
       return await loaded(
         await readMeshSource(path.join(directory, 'box.vtu'), 1),
         'Quader · Tet4',
+        null,
+        defaultView(),
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+  register('desktop:geometry', async (value) => {
+    const spec = parseGeometryImport(value);
+    const status = await backendStatus(layout().backend);
+    if (!status.geometry)
+      throw new Error(
+        'STEP-Import benötigt Gmsh in der Python-Umgebung. Bitte npm run setup:backend ausführen; die gepackte App enthält Gmsh noch nicht.',
+      );
+    if (!allowDiscard()) return null;
+    const selection = await dialog.showOpenDialog(window, {
+      title: 'STEP-Geometrie importieren',
+      filters: [{ name: 'STEP-Geometrie', extensions: ['step', 'stp'] }],
+      properties: ['openFile'],
+    });
+    if (selection.canceled) return null;
+    const file = selection.filePaths[0];
+    if ((await stat(file)).size > MAX_STEP_BYTES)
+      throw new Error('STEP-Dateien über 64 MB werden in diesem Schnitt nicht unterstützt.');
+    const directory = await mkdtemp(path.join(tmpdir(), 'femantis-step-'));
+    try {
+      await requestBackend(
+        layout().backend,
+        'meshGeometry',
+        { path: file, outputDir: directory, maxSize: spec.maxSizeM },
+        { timeout: 600_000 },
+      );
+      const meshed = await readMeshSource(path.join(directory, 'geometry.msh'), 1);
+      const stem = path.basename(file, path.extname(file));
+      return await loaded(
+        { ...meshed, name: `${stem}.msh` },
+        `${stem} · Tet4 (STEP)`,
         null,
         defaultView(),
       );
