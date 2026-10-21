@@ -41,6 +41,8 @@ export interface BackendStatus {
   available: boolean;
   pythonVersion?: string;
   toolboxVersion?: string;
+  /** Gmsh is installed, so STEP geometry can be meshed (#13). */
+  geometry?: boolean;
   message?: string;
 }
 
@@ -118,6 +120,11 @@ export interface BoxDefinition {
   divisions: [number, number, number];
 }
 
+export interface GeometryImportDefinition {
+  /** Maximum element edge length in metres; null derives it from the bounding box. */
+  maxSizeM: number | null;
+}
+
 export interface DesktopAPI {
   backendStatus(): Promise<BackendStatus>;
   openMesh(scale: number): Promise<OpenedProject | null>;
@@ -126,6 +133,7 @@ export interface DesktopAPI {
   saveProject(view: ViewState): Promise<{ path: string; name: string } | null>;
   setDirty(dirty: boolean): Promise<void>;
   createBox(specification: BoxDefinition): Promise<OpenedProject | null>;
+  importGeometry(specification: GeometryImportDefinition): Promise<OpenedProject | null>;
   openModel(): Promise<OpenedProject | null>;
   exportModel(document: ModelDocument): Promise<string | null>;
   validateModel(document: ModelDocument): Promise<{ valid: true }>;

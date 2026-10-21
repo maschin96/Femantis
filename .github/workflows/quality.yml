@@ -44,6 +44,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: npm ci
+      - name: Gmsh system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglu1-mesa libxrender1 libxcursor1 libxft2 libxinerama1 libxfixes3 libfontconfig1
       - name: Install pinned public Toolbox
         run: npm run setup:backend
         env:
@@ -90,7 +95,7 @@ jobs:
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y xvfb libglu1-mesa libxrender1 libxcursor1 libxft2 libxinerama1 libxfixes3 libfontconfig1
       - name: Desktop tests
         if: runner.os != 'Linux'
         run: npm run test:desktop

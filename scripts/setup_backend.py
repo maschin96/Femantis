@@ -10,6 +10,9 @@ COMMIT = "baae07f088a87ce6e256af3c5855a3b110d0f17a"
 ROOT = Path(__file__).resolve().parents[1]
 # The full commit SHA in the URL pins the exact source tree. pip downloads it
 # with its bundled CA certificates, which python.org builds on macOS lack.
+# Optional STEP meshing (#13). Gmsh is GPL-2.0-or-later; it is installed for development
+# only and is not part of backend/constraints.txt or the packaged runtime.
+GMSH_REQUIREMENT = "gmsh==4.15.2"
 ARCHIVE = f"https://codeload.github.com/maschin96/FEM-Toolbox/tar.gz/{COMMIT}"
 
 
@@ -60,7 +63,7 @@ def main():
     if not environment.exists():
         venv.create(environment, with_pip=True)
     python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
-    arguments = [str(python), "-m", "pip", "install", f"fem-toolbox @ {ARCHIVE}"]
+    arguments = [str(python), "-m", "pip", "install", f"fem-toolbox @ {ARCHIVE}", GMSH_REQUIREMENT]
     if sys.version_info[:2] == (3, 13):
         arguments.extend(["--constraint", str(ROOT / "backend/constraints.txt")])
     if subprocess.run(arguments).returncode != 0:

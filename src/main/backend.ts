@@ -301,6 +301,7 @@ export async function backendStatus(backend: BackendRuntime): Promise<BackendSta
         available: z.boolean(),
         pythonVersion: z.string().optional(),
         toolboxVersion: z.string().optional(),
+        geometry: z.boolean().optional(),
         message: z.string().optional(),
       })
       .parse(await requestBackend(backend, 'capabilities'));

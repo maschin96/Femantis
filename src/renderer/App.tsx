@@ -21,6 +21,7 @@ import {
   RotateCcw,
   Ruler,
   Save,
+  Shapes,
   Sparkles,
   Triangle,
   X,
@@ -42,6 +43,7 @@ import { MeshViewer } from './viewer/MeshViewer';
 import { newModel, canonicalModel, parseModelDocument, physicsLabels } from '../shared/model';
 import { ModelEditor } from './ModelEditor';
 import { BoxCreator } from './BoxCreator';
+import { GeometryImporter } from './GeometryImporter';
 import { ModelRestartDialog } from './ModelRestartDialog';
 import { ResultControls, ResultsPanel } from './ResultsPanel';
 import { Ribbon, RibbonButton, RibbonGroup, RibbonStack, type RibbonTab } from './Ribbon';
@@ -115,6 +117,7 @@ export function App() {
   const [collapsed, setCollapsed] = useState<('volume' | 'facet')[]>([]);
   const [focusRequest, setFocusRequest] = useState<{ paths: string[]; nonce: number } | null>(null);
   const [boxDialog, setBoxDialog] = useState(false);
+  const [geometryDialog, setGeometryDialog] = useState(false);
   const [restartDialog, setRestartDialog] = useState(false);
   const [phase, setPhase] = useState('');
   const [fieldId, setFieldId] = useState('');
@@ -560,6 +563,18 @@ export function App() {
             label="Quader erstellen"
             disabled={locked || !backend.available}
             onClick={() => setBoxDialog(true)}
+          />
+          <RibbonButton
+            size="large"
+            icon={<Shapes size={24} />}
+            label="STEP-Geometrie"
+            title={
+              backend.geometry
+                ? 'STEP-Datei laden und mit Gmsh zu einem Tet4-Netz vernetzen'
+                : 'Gmsh fehlt in der Python-Umgebung (npm run setup:backend)'
+            }
+            disabled={locked || !backend.available || !backend.geometry}
+            onClick={() => setGeometryDialog(true)}
           />
         </RibbonGroup>
         <RibbonGroup label="Beispiele">
@@ -1158,6 +1173,24 @@ export function App() {
               if (project) {
                 accept(project);
                 setBoxDialog(false);
+                setModel(newModel(project.mesh));
+                setStage('model');
+                setDirty(true);
+              }
+            })
+          }
+        />
+      )}
+      {geometryDialog && (
+        <GeometryImporter
+          busy={!!busy}
+          onClose={() => setGeometryDialog(false)}
+          onImport={(spec) =>
+            void run('STEP-Geometrie vernetzen', async () => {
+              const project = await window.desktop.importGeometry(spec);
+              if (project) {
+                accept(project);
+                setGeometryDialog(false);
                 setModel(newModel(project.mesh));
                 setStage('model');
                 setDirty(true);
