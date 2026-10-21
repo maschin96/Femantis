@@ -36,4 +36,9 @@ CAD-Bearbeitung.
 - `tests/geometry-import.test.ts`, `tests/desktop/geometry.spec.ts` (echtes Electron/WebGL:
   Import, Gruppen, Berechnung mit Farbskala 300–350 K).
 - Lokal: `npm test` (136), `npm run test:backend` (44), `npm run test:desktop` (31) bestanden.
-  CI-Ergebnisse auf Windows/Ubuntu stehen im Pull Request.
+  - CI (PR #44, Lauf 39591420537): alle neun Jobs grün, darunter Backend auf Ubuntu 24.04
+  (Python 3.11–3.13) und Windows 2025 sowie Desktop auf macOS, Windows und Ubuntu.
+  Unter Ubuntu braucht das Gmsh-Wheel Systembibliotheken (`libglu1-mesa`, X11-Bibliotheken);
+  die Workflows installieren sie. Der erste Lauf scheiterte ohne sie in den Linux-Jobs;
+  der Paketjob schlug dort in einem Abbruch-Test fehl und war im Wiederholungslauf grün
+  (Ursache nicht untersucht, vermutlich Timing).
