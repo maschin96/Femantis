@@ -1,6 +1,8 @@
 import type { ResultPacket, ResultField } from '../shared/types';
+import { Ruler } from 'lucide-react';
 import { fieldLabel, interpolationLabel } from './viewer/fields';
 import { NumericInput } from './ModelEditor';
+import { RibbonButton, RibbonGroup, RibbonStack } from './Ribbon';
 const display = (v: number) => v.toLocaleString('de-AT', { maximumSignificantDigits: 7 });
 interface Props {
   result: ResultPacket;
@@ -11,10 +13,6 @@ interface Props {
   customLimits: [number, number] | null;
   factor: number;
   stale: boolean;
-  onField: (id: string) => void;
-  onComponent: (component: string) => void;
-  onLimits: (range: [number, number] | null) => void;
-  onFactor: (factor: number) => void;
   values: Float64Array;
   selectedNodes: number[];
   selectedCell: number | null;
@@ -36,46 +34,6 @@ export function ResultsPanel(props: Props) {
             Dieser ältere Lauf hat keinen gespeicherten Laufnachweis. Bitte neu berechnen, um seine
             Zuordnung zum Modell zu bestätigen.
           </p>
-        )}
-      </div>
-      <div className="result-controls">
-        <label className="editor-input">
-          Ergebnisfeld
-          <select
-            aria-label="Ergebnisfeld"
-            value={props.field.id}
-            onChange={(e) => props.onField(e.target.value)}
-          >
-            {props.result.fields.map((field) => (
-              <option key={field.id} value={field.id}>
-                {fieldLabel(field.id)} [{field.unit}]
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="editor-input">
-          Komponente
-          <select
-            aria-label="Ergebniskomponente"
-            value={props.component}
-            onChange={(e) => props.onComponent(e.target.value)}
-          >
-            {props.field.components.map((c) => (
-              <option key={c} value={c}>
-                {c === 'scalar' ? 'Skalar' : c}
-              </option>
-            ))}
-            {props.field.components.length === 3 && <option value="magnitude">Betrag</option>}
-          </select>
-        </label>
-        {props.result.fields.some((field) => field.id === 'displacement_m') && (
-          <NumericInput
-            label="Verformungsfaktor"
-            value={props.factor}
-            onChange={(v) => {
-              if (v >= 0 && v <= 1e6) props.onFactor(v);
-            }}
-          />
         )}
       </div>
       <div className="field-caption">
@@ -116,27 +74,9 @@ export function ResultsPanel(props: Props) {
           </dl>
         </div>
       )}
-      <details>
-        <summary>Farbskala festlegen</summary>
-        <div className="input-grid">
-          <NumericInput
-            label="Skalenminimum"
-            value={props.limits[0]}
-            onChange={(v) => {
-              if (v < props.limits[1]) props.onLimits([v, props.limits[1]]);
-            }}
-          />
-          <NumericInput
-            label="Skalenmaximum"
-            value={props.limits[1]}
-            onChange={(v) => {
-              if (v > props.limits[0]) props.onLimits([props.limits[0], v]);
-            }}
-          />
-        </div>
-        <button onClick={() => props.onLimits(null)}>Automatische Skala</button>
-        {props.customLimits && <p>Werte außerhalb der Skala werden farblich begrenzt.</p>}
-      </details>
+      {props.customLimits && (
+        <p className="field-caption">Werte außerhalb der Skala werden farblich begrenzt.</p>
+      )}
       <details className="metric-details">
         <summary>Bilanzen und Kennwerte</summary>
         {Object.entries(props.result.metrics).map(([physics, metrics]) => (
@@ -159,5 +99,100 @@ export function ResultsPanel(props: Props) {
         </p>
       </details>
     </section>
+  );
+}
+
+interface ControlProps {
+  result: ResultPacket;
+  field: ResultField;
+  component: string;
+  limits: [number, number];
+  customLimits: [number, number] | null;
+  factor: number;
+  onField: (id: string) => void;
+  onComponent: (component: string) => void;
+  onLimits: (range: [number, number] | null) => void;
+  onFactor: (factor: number) => void;
+}
+
+/** Ribbon commands of the results tab: field, component, colour scale, deformation. */
+export function ResultControls(props: ControlProps) {
+  const hasDisplacement = props.result.fields.some((field) => field.id === 'displacement_m');
+  return (
+    <>
+      <RibbonGroup label="Feld">
+        <RibbonStack>
+          <label className="rb-field">
+            Ergebnisfeld
+            <select
+              aria-label="Ergebnisfeld"
+              value={props.field.id}
+              onChange={(e) => props.onField(e.target.value)}
+            >
+              {props.result.fields.map((field) => (
+                <option key={field.id} value={field.id}>
+                  {fieldLabel(field.id)} [{field.unit}]
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="rb-field">
+            Komponente
+            <select
+              aria-label="Ergebniskomponente"
+              value={props.component}
+              onChange={(e) => props.onComponent(e.target.value)}
+            >
+              {props.field.components.map((c) => (
+                <option key={c} value={c}>
+                  {c === 'scalar' ? 'Skalar' : c}
+                </option>
+              ))}
+              {props.field.components.length === 3 && <option value="magnitude">Betrag</option>}
+            </select>
+          </label>
+        </RibbonStack>
+      </RibbonGroup>
+      <RibbonGroup label="Farbskala">
+        <RibbonStack>
+          <RibbonButton
+            icon={<Ruler size={14} />}
+            label="Automatische Skala"
+            pressed={!props.customLimits}
+            onClick={() => props.onLimits(null)}
+          />
+          <NumericInput
+            className="rb-field"
+            label="Skalenminimum"
+            value={props.limits[0]}
+            onChange={(v) => {
+              if (v < props.limits[1]) props.onLimits([v, props.limits[1]]);
+            }}
+          />
+          <NumericInput
+            className="rb-field"
+            label="Skalenmaximum"
+            value={props.limits[1]}
+            onChange={(v) => {
+              if (v > props.limits[0]) props.onLimits([props.limits[0], v]);
+            }}
+          />
+        </RibbonStack>
+      </RibbonGroup>
+      {hasDisplacement && (
+        <RibbonGroup label="Verformung">
+          <RibbonStack>
+            <NumericInput
+              className="rb-field"
+              label="Verformungsfaktor"
+              value={props.factor}
+              onChange={(v) => {
+                if (v >= 0 && v <= 1e6) props.onFactor(v);
+              }}
+            />
+          </RibbonStack>
+        </RibbonGroup>
+      )}
+    </>
   );
 }

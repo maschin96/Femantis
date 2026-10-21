@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { MeshPacket, ViewState } from '../../shared/types';
 import { buildDisplay, cellPalette } from './display';
+import { fitDistance, viewFrame, type Insets } from './frame';
 import type { ResultField } from '../../shared/types';
 import { scalarValues, fieldLimits, gpuFieldValues } from './fields';
 import { OrientationGizmo } from './OrientationGizmo';
@@ -23,6 +24,8 @@ function measured<T>(name: string, action: () => T): T {
 const viridis = `float t=clamp(value,0.0,1.0);vec3 a=vec3(0.0578054,0.0003035,0.0886556);vec3 b=vec3(0.0437350,0.0843762,0.2581829);vec3 c0=vec3(0.0152085,0.2831487,0.2622507);vec3 d=vec3(0.1119324,0.5840784,0.1221388);vec3 e=vec3(0.9822506,0.7991027,0.0185002);vec3 col=t<0.25?mix(a,b,t*4.0):t<0.5?mix(b,c0,(t-0.25)*4.0):t<0.75?mix(c0,d,(t-0.5)*4.0):mix(d,e,(t-0.75)*4.0);gl_FragColor=vec4(col,1.0);\n#include <colorspace_fragment>\n`;
 
 export class Viewport {
+  /** Canvas edges covered by floating glass panels; framing targets the free area. */
+  private insets: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(38, 1, 0.001, 100);
@@ -168,9 +171,19 @@ export class Viewport {
     const height = Math.max(this.host.clientHeight, 1);
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
+    const frame = viewFrame(width, height, this.insets);
+    if (frame.offsetX || frame.offsetY)
+      this.camera.setViewOffset(width, height, frame.offsetX, frame.offsetY, width, height);
+    else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.render();
   };
+  /** Moves the optical axis to the free area; refits only when asked (display only). */
+  setInsets(insets: Insets, refit = false): void {
+    this.insets = insets;
+    this.resize();
+    if (refit) this.fit('iso', false);
+  }
   private cameraChanged = (): void => {
     this.onCamera({
       position: this.camera.position.toArray() as [number, number, number],
@@ -337,10 +350,15 @@ export class Viewport {
       side: [1, 0, 0.001],
     };
     this.controls.target.set(0, 0, 0);
-    const distance =
-      (this.radius / Math.sin(THREE.MathUtils.degToRad(this.camera.fov) / 2)) *
-      1.15 *
-      Math.max(1, 1 / this.camera.aspect);
+    const width = Math.max(this.host.clientWidth, 1);
+    const height = Math.max(this.host.clientHeight, 1);
+    const distance = fitDistance(
+      this.radius,
+      this.camera.fov,
+      width,
+      height,
+      viewFrame(width, height, this.insets),
+    );
     this.camera.position.fromArray(directions[preset]).normalize().multiplyScalar(distance);
     this.controls.update();
     this.render();

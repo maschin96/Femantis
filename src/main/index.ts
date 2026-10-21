@@ -449,9 +449,10 @@ function createWindow(): void {
     minHeight: 720,
     title: 'Femantis Desktop',
     backgroundColor: '#E8EFF2',
-    // The glass header doubles as the macOS title bar (drag region in styles.css).
+    // The ribbon's title row doubles as the macOS title bar (drag region in styles.css);
+    // the window controls sit centred in that row.
     ...(process.platform === 'darwin'
-      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 24, y: 32 } }
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 26, y: 24 } }
       : {}),
     show: false,
     webPreferences: {

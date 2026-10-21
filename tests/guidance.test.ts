@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextStep, stepStates, type WorkflowState } from '../src/renderer/guidance';
+import { nextStep, stepStates, tabAvailable, type WorkflowState } from '../src/renderer/guidance';
 
 const base: WorkflowState = {
   hasMesh: true,
@@ -70,6 +70,29 @@ describe('workflow guidance', () => {
     });
     expect(stepStates({ ...base, hasModel: true, hasResult: true, stale: true }).calculation).toBe(
       false,
+    );
+  });
+});
+
+describe('ribbon tab availability', () => {
+  it('opens a stage tab only once its input exists', () => {
+    expect(tabAvailable({ ...base, hasMesh: false }, false)).toEqual({
+      mesh: true,
+      model: false,
+      calculation: false,
+      results: false,
+    });
+    expect(tabAvailable({ ...base, hasModel: true, hasResult: true }, false)).toEqual({
+      mesh: true,
+      model: true,
+      calculation: true,
+      results: true,
+    });
+  });
+
+  it('locks every stage tab while a job runs or a JSON draft is unapplied', () => {
+    expect(Object.values(tabAvailable({ ...base, hasModel: true, hasResult: true }, true))).toEqual(
+      [false, false, false, false],
     );
   });
 });

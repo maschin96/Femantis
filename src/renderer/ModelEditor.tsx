@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Trash2, Check, Play, FileDown, FolderOpen } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { MeshPacket, ModelDocument, Physics, JsonValue } from '../shared/types';
 import { fieldOf, newModel, parseModelDocument, physicsLabels } from '../shared/model';
 import { focusPath } from '../shared/diagnostics';
@@ -9,10 +9,6 @@ interface Props {
   document: ModelDocument;
   busy: boolean;
   onChange: (doc: ModelDocument) => void;
-  onValidate: () => void;
-  onCalculate: () => void;
-  onOpen: () => void;
-  onExport: () => void;
   onPendingChange: (value: boolean) => void;
   focusRequest?: { paths: string[]; nonce: number } | null;
   onFocusHandled?: () => void;
@@ -23,17 +19,20 @@ export function NumericInput({
   onChange,
   disabled = false,
   path,
+  className = 'editor-input',
 }: {
   label: string;
   value: unknown;
   onChange: (value: number) => void;
   disabled?: boolean;
   path?: string;
+  /** `rb-field` renders the compact ribbon variant. */
+  className?: string;
 }) {
   const [text, setText] = useState(String(value ?? ''));
   useEffect(() => setText(typeof value === 'number' ? String(value) : ''), [value]);
   return (
-    <label className="editor-input">
+    <label className={className}>
       {label}
       <input
         aria-label={label}
@@ -187,16 +186,6 @@ export function ModelEditor(props: Props) {
           <span>MODELL · STATIONÄR</span>
           <h2>Vom Netz zum Rechenmodell</h2>
           <p>Materialien zuordnen, Randbedingungen festlegen und das Modell prüfen.</p>
-        </div>
-        <div className="editor-tools">
-          <button disabled={props.busy || pending} onClick={props.onOpen}>
-            <FolderOpen size={14} />
-            TOML öffnen
-          </button>
-          <button disabled={props.busy || pending} onClick={props.onExport}>
-            <FileDown size={14} />
-            TOML exportieren
-          </button>
         </div>
       </div>
       {structureError && (
@@ -569,20 +558,6 @@ export function ModelEditor(props: Props) {
           </>
         )}
       </section>
-      <div className="editor-bottom">
-        <button disabled={props.busy || pending || !!structureError} onClick={props.onValidate}>
-          <Check size={16} />
-          Modell prüfen
-        </button>
-        <button
-          className="primary"
-          disabled={props.busy || pending || !!structureError}
-          onClick={props.onCalculate}
-        >
-          <Play size={15} />
-          Berechnen
-        </button>
-      </div>
     </div>
   );
 }
